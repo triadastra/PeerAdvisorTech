@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PEER ADVISOR TECH DEPARTMENT — design tokens
+   Monochrome luxe: warm near-black, warm white, a single acid accent.
+   Type system: Space Grotesk (display) · Inter (body) · JetBrains Mono (technical)
+   ───────────────────────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Inter Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Warm neutral "ink" scale (true neutral, not navy) */
+  --color-ink-50:  #f6f5f3;
+  --color-ink-100: #ecebe6;
+  --color-ink-200: #cfccc4;
+  --color-ink-300: #a8a59c;
+  --color-ink-400: #82807a;
+  --color-ink-500: #605e58;
+  --color-ink-600: #423f3b;
+  --color-ink-700: #2b2a27;
+  --color-ink-800: #1d1c1a;
+  --color-ink-850: #161513;
+  --color-ink-900: #121110;
+  --color-ink-950: #0a0908;
+
+  /* Single acid accent — used sparingly */
+  --color-acid-300: #e2fb86;
+  --color-acid-400: #d4f95a;
+  --color-acid-500: #c8f135;
+  --color-acid-600: #a6cc14;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-ink-950);
+  color: var(--color-ink-200);
+  overflow-x: hidden;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+::selection {
+  background: var(--color-acid-500);
+  color: var(--color-ink-950);
+}
+
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--color-ink-950); }
+::-webkit-scrollbar-thumb { background: var(--color-ink-700); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-600); }
+
+/* ── Utilities ─────────────────────────────────────────────────────────── */
+
+/* Mono technical label / kicker */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Hide scrollbar on the workspace tab strip while keeping it scrollable */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Deluxe underline that wipes in from the left on hover */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-underline:hover { background-size: 100% 1px; }
+
+/* Faint blueprint grid (used very subtly behind the hero) */
+.grid-faint {
+  background-image:
+    linear-gradient(var(--color-ink-800) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-ink-800) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 78%);
+          mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 78%);
+}
+
+/* Fixed film-grain overlay for a tactile, premium surface */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Blinking status dot */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+.status-dot { animation: blink 2.4s steps(1, end) infinite; }
+
+/* ── Reduced motion ────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
