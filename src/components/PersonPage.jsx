@@ -50,6 +50,12 @@ export default function PersonPage() {
 
   return (
     <>
+      {/* Per-page metadata — React 19 hoists these into <head> for shared links. */}
+      <title>{`${person.name} — Peer Advisor Tech Department`}</title>
+      {(person.headline || person.title) && (
+        <meta name="description" content={person.headline || person.title} />
+      )}
+
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
         <div className="mx-auto max-w-[1200px] px-6 pt-[120px] md:pt-[160px]">
           <button onClick={() => navigate('/team')} className="kicker text-ink-400 hover:text-ink-50 transition-colors link-underline">

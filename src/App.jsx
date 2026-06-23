@@ -1,17 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence, motion, useScroll, useMotionValueEvent, useReducedMotion } from 'framer-motion';
 import Lenis from 'lenis';
 import { Menu, X } from 'lucide-react';
+// Home-page sections load eagerly — they're the first paint and must not flash.
 import LandingPage from './components/LandingPage';
 import WorkIndex from './components/WorkIndex';
-import People from './components/People';
-import PersonPage from './components/PersonPage';
-import ProjectDetail from './components/ProjectDetail';
-import Join from './components/Join';
 import Contact from './components/Contact';
-import Access from './components/Access';
-import Workspace from './components/workspace/Workspace';
+// Secondary routes (and the auth-only workspace) are code-split so the landing
+// page no longer ships the whole site in one chunk.
+const People = lazy(() => import('./components/People'));
+const PersonPage = lazy(() => import('./components/PersonPage'));
+const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
+const Join = lazy(() => import('./components/Join'));
+const Access = lazy(() => import('./components/Access'));
+const Workspace = lazy(() => import('./components/workspace/Workspace'));
 import { projects } from './data/projects';
 import { people } from './data/people';
 import { site } from './data/site';
@@ -187,17 +190,20 @@ function ProjectPage() {
   return <ProjectDetail project={project} onBack={handleBack} onSelectProject={handleSelect} />;
 }
 
+// Shown while a lazily-loaded route chunk is fetched.
+function RouteFallback({ label = 'Loading…' }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <span className="kicker text-ink-500 flex items-center gap-2">
+        <span className="w-1.5 h-1.5 rounded-full bg-acid-500 status-dot" /> {label}
+      </span>
+    </div>
+  );
+}
+
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="kicker text-ink-500 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-acid-500 status-dot" /> Authenticating…
-        </span>
-      </div>
-    );
-  }
+  if (loading) return <RouteFallback label="Authenticating…" />;
   if (!user) return <Navigate to="/access" replace />;
   return children;
 }
@@ -234,15 +240,17 @@ export default function App() {
       {!isApp && <Nav />}
       <main>
         <AnimatePresence mode="wait">
-          <Routes location={location} key={location.pathname}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/team" element={<People />} />
-            <Route path="/team/:id" element={<PersonPage />} />
-            <Route path="/join" element={<Join />} />
-            <Route path="/project/:id" element={<ProjectPage />} />
-            <Route path="/access" element={<Access />} />
-            <Route path="/workspace" element={<RequireAuth><Workspace /></RequireAuth>} />
-          </Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/team" element={<People />} />
+              <Route path="/team/:id" element={<PersonPage />} />
+              <Route path="/join" element={<Join />} />
+              <Route path="/project/:id" element={<ProjectPage />} />
+              <Route path="/access" element={<Access />} />
+              <Route path="/workspace" element={<RequireAuth><Workspace /></RequireAuth>} />
+            </Routes>
+          </Suspense>
         </AnimatePresence>
       </main>
       {!isApp && <SiteFooter />}

@@ -51,6 +51,10 @@ export default function ProjectDetail({ project, onBack, onSelectProject }) {
       exit={reduce ? undefined : { opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
+      {/* Per-page metadata — React 19 hoists these into <head> for shared links. */}
+      <title>{`${project.title} — Peer Advisor Tech Department`}</title>
+      {project.caption && <meta name="description" content={project.caption} />}
+
       {/* reading progress */}
       <motion.div className="fixed top-0 left-0 h-[2px] bg-acid-500 z-[60]" style={{ width: progress }} />
 
