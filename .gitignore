@@ -30,3 +30,9 @@ server/.data
 *.njsproj
 *.sln
 *.sw?
+
+# Local tooling, archives, and generated/binary artifacts (keep out of the repo)
+.claude/
+*.zip
+*.docx
+super_relay_contour_map*.html

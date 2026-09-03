@@ -31,8 +31,11 @@ export default function ProjectDetail({ project, onBack, onSelectProject }) {
   if (!project) return null;
 
   const projectIndex = projects.findIndex((p) => p.id === project.id);
-  const { spec, status, tier, affiliation, techStack = [], highlights = [], workDescriptions = [] } = project;
-  const team = teamForSpec(spec);
+  const { spec, status, tier, affiliation, teamOrder = [], techStack = [], highlights = [], workDescriptions = [] } = project;
+  const team = teamForSpec(spec).sort((a, b) => {
+    if (!teamOrder.length) return 0;
+    return teamOrder.indexOf(a.name) - teamOrder.indexOf(b.name);
+  });
 
   const related = projects
     .filter(

@@ -42,3 +42,19 @@ export function dayLabel(iso) {
 
 // Days from now (negative = past). Used to bucket agenda items.
 export const dayDelta = (iso) => Math.round((startOfDay(iso) - startOfDay(new Date())) / 86_400_000);
+
+// ── Recruiting countdown ────────────────────────────────────────────────────
+// Milliseconds left until an epoch-ms timestamp (never negative).
+export const msLeft = (endTs) => Math.max(0, Number(endTs) - nowMs());
+
+// "23h 41m" / "41m 12s" / "closed" — compact recruiting-window countdown.
+export function fmtCountdown(endTs) {
+  const ms = msLeft(endTs);
+  if (ms <= 0) return 'closed';
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
+  return `${m}m ${String(sec).padStart(2, '0')}s`;
+}

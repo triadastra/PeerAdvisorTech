@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { people } from '../data/people';
 import { projects, liveLeads } from '../data/projects';
-import SpecRing from './SpecRing';
-import CharacterReveal from './CharacterReveal';
+import ProfileRing from './ProfileRing';
+import { rolesFor, TRAFFIC_ROLES } from '../data/trafficRoles';
 import Contact from './Contact';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -22,9 +21,7 @@ function Section({ title, children }) {
 export default function PersonPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const reduce = useReducedMotion();
   const person = people.find((p) => p.id === id);
-  const [revealed, setRevealed] = useState(!!reduce);
 
   if (!person) {
     return (
@@ -43,15 +40,14 @@ export default function PersonPage() {
   const leads = liveLeads(person);
   const specs = person.leads === 'all' ? 'all' : leads.map((l) => l.n);
   const bio = person.bio?.length ? person.bio : [person.insights];
-  const derived = [
+  const trafficRoles = rolesFor(person);
+  const derived = person.status === 'historical' ? [] : [
     ['Status', person.status === 'away' ? 'Away' : 'Active'],
-    ['Specs', specs === 'all' ? `All ${projects.length}` : String(specs.length)],
   ];
   const infobox = person.facts ? [...person.facts, ...derived] : [['Role', person.title], ['Class', `’${person.year}`], ...derived];
 
   return (
-    <>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
         <div className="mx-auto max-w-[1200px] px-6 pt-[120px] md:pt-[160px]">
           <button onClick={() => navigate('/team')} className="kicker text-ink-400 hover:text-ink-50 transition-colors link-underline">
             ← People
@@ -100,7 +96,7 @@ export default function PersonPage() {
 
               <Section title="Leadership">
                 {specs === 'all' ? (
-                  <p className="text-ink-200">Lead across all {projects.length} specs.</p>
+                  <p className="text-ink-200">Leads across the full project network.</p>
                 ) : specs.length ? (
                   <div className="flex flex-wrap gap-2">
                     {leads.map((l) => {
@@ -149,9 +145,13 @@ export default function PersonPage() {
 
             <aside>
               <div className="lg:sticky lg:top-24 border border-ink-800 p-6">
-                <SpecRing specs={specs} className="w-32 h-32 mx-auto" />
+                <ProfileRing person={person} className="w-32 h-32 mx-auto" />
                 <div className="text-center mt-4 font-display text-xl text-ink-50">{person.name}</div>
-                <div className="kicker text-ink-500 text-center mb-5">Team</div>
+                <div className="flex flex-wrap justify-center gap-2 mt-2 mb-5">
+                  {trafficRoles.filter((role) => TRAFFIC_ROLES[role].label).map((role) => (
+                    <span key={role} className="kicker" style={{ color: TRAFFIC_ROLES[role].color }}>{TRAFFIC_ROLES[role].label}</span>
+                  ))}
+                </div>
                 <dl>
                   {infobox.map(([k, v]) => (
                     <div key={k} className="border-t border-ink-800 py-3">
@@ -165,9 +165,6 @@ export default function PersonPage() {
           </div>
         </div>
         <Contact />
-      </motion.div>
-
-      <AnimatePresence>{!revealed && <CharacterReveal person={person} onDone={() => setRevealed(true)} />}</AnimatePresence>
-    </>
+    </motion.div>
   );
 }

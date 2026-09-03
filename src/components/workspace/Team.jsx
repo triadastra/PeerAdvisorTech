@@ -3,6 +3,7 @@ import { people, teamForSpec } from '../../data/people';
 import { projects } from '../../data/projects';
 import { SpecDot, SectionHead } from './shared';
 import { pad } from './util';
+import ProfileRing from '../ProfileRing';
 
 const specsSorted = [...projects].sort((a, b) => a.spec - b.spec);
 
@@ -10,6 +11,7 @@ export default function TeamView({ ctx }) {
   const { tasks } = ctx;
   const active = people.filter((p) => p.status === 'active').length;
   const away = people.filter((p) => p.status === 'away').length;
+  const historical = people.filter((p) => p.status === 'historical').length;
 
   const openBySpec = (n) => tasks.filter((t) => t.spec === n && t.status !== 'done').length;
   const maxOpen = Math.max(1, ...specsSorted.map((p) => openBySpec(p.spec)));
@@ -19,7 +21,7 @@ export default function TeamView({ ctx }) {
       <div className="flex border-y border-ink-800">
         <div className="flex-1 px-4 py-4 border-r border-ink-800"><div className="font-display text-3xl md:text-4xl text-ink-50 tnum">{pad(people.length)}</div><div className="kicker text-ink-500 mt-1.5">Builders</div></div>
         <div className="flex-1 px-4 py-4 border-r border-ink-800"><div className="font-display text-3xl md:text-4xl text-ink-50 tnum">{pad(active)}</div><div className="kicker text-ink-500 mt-1.5">Active</div></div>
-        <div className="flex-1 px-4 py-4 border-r border-ink-800"><div className="font-display text-3xl md:text-4xl text-ink-50 tnum">{pad(projects.length)}</div><div className="kicker text-ink-500 mt-1.5">Specs</div></div>
+        <div className="flex-1 px-4 py-4 border-r border-ink-800"><div className="font-display text-3xl md:text-4xl text-ink-50 tnum">{pad(historical)}</div><div className="kicker text-ink-500 mt-1.5">Historical</div></div>
         <div className="flex-1 px-4 py-4"><div className="font-display text-3xl md:text-4xl text-ink-50 tnum">{pad(away)}</div><div className="kicker text-ink-500 mt-1.5">Away</div></div>
       </div>
 
@@ -58,7 +60,7 @@ export default function TeamView({ ctx }) {
               const specs = p.leads === 'all' ? projects.map((x) => x.spec) : Array.isArray(p.leads) ? p.leads.map((l) => l.n) : [];
               return (
                 <Link key={p.id} to={`/team/${p.id}`} className="group flex items-center gap-3 border-b border-ink-800 py-3.5">
-                  <span className="font-mono text-[10px] w-8 h-8 border flex items-center justify-center shrink-0 border-ink-700 text-ink-300">{p.avatar}</span>
+                  <ProfileRing person={p} shape="box" className="w-8 h-8 shrink-0" />
                   <span className="text-sm text-ink-100 group-hover:text-acid-500 transition-colors shrink-0">{p.name}</span>
                   <span className="kicker text-ink-600 shrink-0">’{p.year}</span>
                   <span className="hidden md:block kicker text-ink-500 truncate flex-1">{p.title}</span>

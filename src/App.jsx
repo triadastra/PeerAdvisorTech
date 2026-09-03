@@ -117,7 +117,7 @@ function SiteFooter() {
         <div className="flex items-center gap-6 kicker text-ink-400 tnum">
           <span>{projects.length} Projects</span>
           <span className="text-ink-700">·</span>
-          <span>{people.length} Builders</span>
+          <span>{people.filter((p) => p.status !== 'historical').length} Builders</span>
           <span className="text-ink-700">·</span>
           <span className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-acid-500 status-dot" />
@@ -131,6 +131,33 @@ function SiteFooter() {
         </div>
       </div>
     </footer>
+  );
+}
+
+function SponsorSet({ hidden = false }) {
+  return (
+    <div className="sponsor-ticker__set" aria-hidden={hidden || undefined}>
+      {site.sponsors.map((name) => (
+        <span key={name} className="sponsor-ticker__item">
+          <span className="text-acid-500">✦</span>
+          {name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function SponsorTicker() {
+  return (
+    <section className="sponsor-ticker border-t border-ink-800" aria-label="Sponsors">
+      <div className="sponsor-ticker__label">Sponsors</div>
+      <div className="sponsor-ticker__viewport">
+        <div className="sponsor-ticker__track">
+          <SponsorSet />
+          <SponsorSet hidden />
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -245,6 +272,7 @@ export default function App() {
           </Routes>
         </AnimatePresence>
       </main>
+      {!isApp && <SponsorTicker />}
       {!isApp && <SiteFooter />}
       {!isApp && <BackToTop />}
     </div>

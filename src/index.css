@@ -105,6 +105,121 @@ body {
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 .status-dot { animation: blink 2.4s steps(1, end) infinite; }
 
+/* Liquid chromatic identity frames. The gradient layers move independently,
+   while the inset and initials remain still and readable. */
+.chromatic-frame {
+  --frame-width: 2px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--color-ink-50);
+  background: var(--role-gradient);
+}
+
+.chromatic-frame--round { --frame-width: 7px; border-radius: 9999px; }
+.team-profile-frame { --frame-width: 3px; }
+
+.chromatic-frame::before,
+.chromatic-frame::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: -45%;
+  background: var(--role-gradient);
+  filter: blur(0.75px) saturate(1.35);
+  transform-origin: 50% 50%;
+}
+
+.chromatic-frame--round::before {
+  filter: blur(1.5px) saturate(1.35);
+}
+
+.chromatic-frame::after {
+  display: none;
+}
+
+.chromatic-frame--moving::before {
+  animation: chromatic-roll 7s linear infinite;
+}
+
+
+.chromatic-frame__inner {
+  position: absolute;
+  z-index: 1;
+  inset: var(--frame-width);
+  display: grid;
+  place-items: center;
+  background: var(--color-ink-950);
+}
+
+@keyframes chromatic-roll {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* End-of-page sponsor marquee. Two identical sets create a seamless loop. */
+.sponsor-ticker {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 64px;
+  overflow: hidden;
+}
+
+.sponsor-ticker__label {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5rem;
+  border-right: 1px solid var(--color-ink-800);
+  background: var(--color-ink-950);
+  color: var(--color-ink-500);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.sponsor-ticker__viewport { overflow: hidden; }
+
+.sponsor-ticker__track {
+  display: flex;
+  width: max-content;
+  min-width: 200%;
+  animation: sponsor-scroll 24s linear infinite;
+}
+
+.sponsor-ticker__set {
+  display: flex;
+  align-items: center;
+  min-width: 50%;
+}
+
+.sponsor-ticker__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 2.5rem;
+  white-space: nowrap;
+  color: var(--color-ink-200);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+}
+
+@keyframes sponsor-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 640px) {
+  .sponsor-ticker { grid-template-columns: 1fr; }
+  .sponsor-ticker__label { min-height: 34px; border-right: 0; border-bottom: 1px solid var(--color-ink-800); }
+  .sponsor-ticker__track { min-height: 54px; }
+}
+
+
 /* ── Reduced motion ────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

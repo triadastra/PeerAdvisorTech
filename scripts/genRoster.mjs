@@ -14,7 +14,7 @@ const today = new Date().toISOString().slice(0, 10);
 const overview =
   'AI Central is not a spec — it is the umbrella that emerges when all specs run together. ' +
   'The cross-club network and affiliations live there, not in any one number. The StandardCAS-native ' +
-  'inner core is S1–S5 and S8; the outer alliance layer is the recruited clubs under MOU.';
+  'inner core is S2–S6; the outer alliance layer is the recruited clubs under MOU.';
 
 const infra = [
   'One GCP N2A server (~$29/mo) runs every spec.',
@@ -26,100 +26,79 @@ const infra = [
 
 const specs = [
   {
-    n: 0, name: 'Club Alliances', leads: 'Celsia (lead), Gordon (co-lead)',
+    n: 1, name: 'Club Alliances', leads: 'Celsia (lead), Gordon (co-lead)',
     layer: 'Outer alliance layer · part of Gordon’s “069” cluster', status: 'Active',
     summary: 'The outer alliance layer. Recruited clubs join under MOU trade agreements — mutual-benefit, low-dependency cooperation rather than commercial contracts. The club-to-club coordination layer (the club-level “LinkedIn”).',
     tech: 'MOU trade agreements',
     note: 'Distinct from Spec 5’s person-level directory — this is the club axis.',
   },
   {
-    n: 1, name: 'Fyona®', leads: 'Celsia',
+    n: 2, name: 'Fyona®', leads: 'Celsia',
     layer: 'StandardCAS-native core · Affiliation: PA Journalism × StandardCAS™', status: 'Production, ~v1.0.201',
     summary: 'Flagship and current load leader (the majority of platform traffic). An HTML-based AI magazine/layout studio competing with Canva: live preview, AI layout agent, CMYK-PDF / HTML5 / slide export. Saves ~84 hrs/person/semester on layout.',
     tech: 'HTML5, AI layout agent, CMYK/PDF · HTML5 · slide export, StandardCAS-native core',
     note: '',
   },
   {
-    n: 2, name: 'Synonance (Syno)', leads: 'Pete (lead), Celsia (co-lead)',
+    n: 3, name: 'Synonance (Syno)', leads: 'Celsia, Pete, Gordon',
     layer: 'Core', status: 'Production · tiered Fast/Standard/Pro/Max',
     summary: 'RAG study chatbot (formerly Arcana). Built on Qwen-3.6 with a custom Super RAG + MCP pipeline (~84% token reduction), grounded in SHSID curriculum and IB mock exams.',
     tech: 'Qwen-3.6, custom Super RAG, MCP, GCP',
     note: 'Development home is IDX (Pete) under a NON-TRANSFERABLE right of use; ownership is Celsia; runs entirely on Celsia’s GCP.',
   },
   {
-    n: 3, name: 'API Gateway / The Spine', leads: 'Celsia',
-    layer: 'Core · infrastructure backbone', status: 'In development — MUST be hardened before Launchpad opens',
-    summary: 'The infrastructure backbone. Super Relay™ routes across 8 providers (OpenAI, Anthropic, Qwen, DeepSeek, Kimi, Moonshot, Zhipu GLM, xAI, Perplexity) plus Brave Search and Resend. Holds VID identity, the credits ledger, tier map, and telemetry. Its Intelligence layer does Claude-powered PII stripping, anomaly detection, and anonymized board reporting — the teacher panel shows only aggregate club-level charts with a minimum-N floor, no per-student inference.',
-    tech: 'API gateway, multi-LLM routing (8 providers), Brave Search, Resend',
-    note: 'Credits ledger applies a 1.5× markup. Hardening is a blocker for Spec 4 (Launchpad).',
-  },
-  {
-    n: 4, name: 'Launchpad™ (Cyclone)', leads: 'Celsia (lead), Jessica (co-lead)',
+    n: 4, name: 'Launchpad™ (Cyclone)', leads: 'Celsia, Rick, Pete, Gordon, Jessica',
     layer: 'Core', status: 'Pre-launch · v0.64',
-    summary: 'A Netlify + Base44-style build/deploy system with Git, PTY, and Docker, letting clubs ship their own apps. Needs full resource isolation because it runs untrusted student code.',
-    tech: 'Docker, Git, PTY, CI/CD',
-    note: 'The per-app hosting fee here is the identified FIXED-REVENUE component.',
+    summary: 'The unified application platform: Netlify + Base44-style build/deploy with Git, PTY, and Docker; The Spine’s identity, telemetry, and routing across 8 model providers plus Brave Search and Resend; and the shared user-data and competition-question-bank layer.',
+    tech: 'Docker, Git, PTY, CI/CD, API gateway, multi-LLM routing, shared data',
+    note: 'Requires full isolation for untrusted student code. Credits use a 1.5× markup; the per-app hosting fee is the identified FIXED-REVENUE component. Privacy reporting remains aggregate-only with a minimum-N floor.',
   },
   {
-    n: 5, name: 'SharedSpace', leads: 'Unassigned',
+    n: 5, name: 'SharedSpace', leads: 'Gordon (club layer), Celsia (co-lead)',
     layer: 'Core', status: 'In development',
-    summary: 'Student talent directory — a LinkedIn-style searchable index that makes skilled students discoverable (the person axis), reframed from a connector/mesh model to a directory for scale.',
-    tech: 'Search, directory',
-    note: '',
-  },
-  {
-    n: 6, name: 'Club Gateway', leads: 'Gordon (lead), Celsia (co-lead)',
-    layer: 'Part of “069”', status: 'In development',
-    summary: 'Club founding & affiliation governance — the enablement-plus-governance layer for starting and running clubs, including Gordon’s teaching department on how to found a club. Its website runs on Launchpad.',
-    tech: 'Governance, runs on Launchpad',
+    summary: 'The people-and-clubs layer: a searchable student talent directory plus Club Gateway’s founding, affiliation, governance, and teaching tools for starting and running clubs.',
+    tech: 'Search, directory, club governance, runs on Launchpad',
     note: 'This is the deliverable school administration requested.',
   },
   {
-    n: 7, name: 'Database', leads: 'Brian + Rick',
-    layer: 'Shared data layer', status: 'In development',
-    summary: 'The shared data layer: user data plus a competition question bank for prep (IOAI, CSP, NOIP, IOI, AMC, AIME, and similar).',
-    tech: 'User data, competition question bank',
-    note: '',
-  },
-  {
-    n: 8, name: 'CareerPlanner', leads: 'Celsia',
+    n: 6, name: 'CareerPlanner', leads: 'Celsia',
     layer: 'StandardCAS-native core', status: 'In development',
     summary: 'Student-facing career exploration tool.',
     tech: 'StandardCAS-native',
     note: '',
   },
   {
-    n: 9, name: 'DataSci Outreach Course', leads: 'Gordon + Rainn + Brian',
+    n: 7, name: 'DataSci Outreach Course', leads: 'Gordon + Rainn + Brian',
     layer: 'Third of Gordon’s “069” cluster', status: 'Planned — gated on Launchpad (S4) approval',
     summary: 'A data-science teaching/outreach course. Deploys on Launchpad, so it follows once that platform opens.',
     tech: 'Data science, curriculum',
     note: 'Gated on Spec 4 (Launchpad) approval.',
   },
   {
-    n: 10, name: 'Competition Lists', leads: 'Celsia',
+    n: 8, name: 'Competition Lists', leads: 'Brian + Rick',
     layer: 'Competition-facing surface', status: 'In development',
-    summary: 'The competition-facing surface: curated lists and prep for the contests Spec 7’s bank feeds. S7 is the data store; S10 is what students actually see.',
+    summary: 'The competition-facing surface: curated lists and prep backed by Launchpad’s integrated question bank. S4 stores the data; S8 is what students actually see.',
     tech: 'Curation, prep',
-    note: 'Adjacent to Spec 7 — confirm whether to keep them split.',
+    note: 'The question bank is maintained inside Launchpad; this remains the student-facing surface.',
   },
 ];
 
 const people = [
-  ['Celsia', 'Owner. Leads S0, S1, S3, S4, S8, S10; co-leads S2, S6. Owns Synonance; GCP host.'],
-  ['Gordon', 'Leads S6, S9; co-leads S0. Owns the “069” cluster (S0/S6/S9) and the founding-a-club teaching dept.'],
-  ['Pete', 'Leads S2 (Synonance); development home is his IDX, under a non-transferable right of use.'],
+  ['Celsia', 'Owner. Leads S1, S2, and S6; team on S3, S4, S5, and S7. Owns Synonance; GCP host.'],
+  ['Gordon', 'Synonance team (S3) and Launchpad team (S4); leads SharedSpace’s club layer (S5) and S7; co-leads S1. Owns the founding-a-club teaching dept.'],
+  ['Pete', 'Launchpad team (S4); leads S3 (Synonance); development home is his IDX, under a non-transferable right of use.'],
   ['Jessica', 'Co-leads S4 (Launchpad).'],
-  ['Brian', 'Leads S7 (Database) and S9 (DataSci Outreach).'],
-  ['Rick', 'Leads S7 (Database).'],
-  ['Rainn', 'Leads S9 (DataSci Outreach).'],
+  ['Brian', 'Works on S7 (DataSci Outreach) and leads S8 (Competition Lists).'],
+  ['Rick', 'Launchpad team (S4) and lead on S8 (Competition Lists).'],
+  ['Rainn', 'Leads S7 (DataSci Outreach).'],
 ];
 
 const handoff = [
   'September handoff: this is the locked master roster a successor should work from.',
-  'S3 (The Spine) must be hardened before S4 (Launchpad) opens.',
-  'S4 (Launchpad) needs full resource isolation (untrusted code) and carries the fixed-revenue per-app fee.',
-  'S9 (DataSci Outreach) is gated on S4 approval.',
-  'S7 vs S10: confirm whether to keep the data store and the competition surface split.',
+  'S4 (Launchpad) includes The Spine and database; routing must be hardened before the platform opens.',
+  'S4 needs full resource isolation (untrusted code) and carries the fixed-revenue per-app fee.',
+  'S7 (DataSci Outreach) is gated on S4 approval.',
+  'S4 stores the competition question bank; S8 remains the student-facing competition surface.',
   'Ownership/legal: Synonance dev home is IDX (Pete) under a non-transferable right of use; ownership is Celsia.',
 ];
 
