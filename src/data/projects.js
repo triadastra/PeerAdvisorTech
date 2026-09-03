@@ -1,26 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────
-//  PROJECTS — the public-facing roster (AI Central, Specs 00–10).
+//  PROJECTS — the public-facing roster (AI Central).
 //  Sanitized: internal details (pricing, ownership, infra cost, security
 //  status) live only in the handoff doc, never here.
 //  Team/leadership is NOT stored here — it derives from ./people.js
 //  (teamForSpec) so there is a single source of truth. See CONTENT.md.
+//
+//  Spec numbers are stable IDs, not positions: they stay attached to a
+//  project for life so people.js `leads` keep pointing at the right work.
+//  Gaps in the sequence are expected when a spec is retired.
 // ─────────────────────────────────────────────────────────────────────────
 
 export const projects = [
-  {
-    id: 'club-alliances',
-    spec: 0,
-    title: 'Club Alliances',
-    caption: 'Club-to-club alliances under mutual-benefit MOUs.',
-    category: 'Community',
-    status: 'Active',
-    bio: 'The outer alliance layer of AI Central. Recruited clubs join under mutual-benefit MOU trade agreements — low-dependency cooperation rather than commercial contracts. It is the club-to-club coordination layer that connects organizations across campus.',
-    techStack: ['MOU framework', 'Club coordination'],
-    workDescriptions: [
-      { title: 'Alliance model', description: 'Designed a mutual-benefit MOU structure that lets clubs cooperate without commercial lock-in.' },
-      { title: 'Coordination layer', description: 'A club-level network — the connective tissue between organizations, distinct from the person-level directory.' },
-    ],
-  },
   {
     id: 'fyona',
     spec: 1,
@@ -46,7 +36,7 @@ export const projects = [
   {
     id: 'synonance',
     spec: 2,
-    title: 'Synonance',
+    title: 'Academy',
     caption: 'A RAG study chatbot grounded in real curriculum.',
     category: 'AI / ML',
     tier: 'Core',
@@ -63,28 +53,6 @@ export const projects = [
       { title: 'Super RAG pipeline', description: 'A custom retrieval + MCP pipeline that grounds answers in source material while cutting token usage by ~84%.' },
       { title: 'Curriculum grounding', description: 'Indexed real curriculum and IB mock exams so guidance maps to what students are actually studying.' },
       { title: 'Tiered responses', description: 'Fast, Standard, Pro, and Max tiers balance speed, depth, and cost per question.' },
-    ],
-  },
-  {
-    id: 'the-spine',
-    spec: 3,
-    title: 'The Spine',
-    caption: 'The routing, identity, and telemetry backbone.',
-    category: 'Infrastructure',
-    tier: 'Core',
-    affiliation: 'StandardCAS™',
-    status: 'In development',
-    bio: 'The infrastructure backbone every project runs on. The Spine routes intelligently across many model providers and services, carries identity and telemetry, and includes an intelligence layer for privacy-first, aggregate-only reporting.',
-    techStack: ['API gateway', 'Multi-LLM routing', 'Brave Search', 'Resend'],
-    highlights: [
-      'Routes across 8 model providers plus search and email',
-      'Identity, telemetry, and anomaly detection',
-      'Privacy-first: aggregate-only reporting, no per-student inference',
-    ],
-    workDescriptions: [
-      { title: 'Super Relay routing', description: 'A unified gateway that routes requests across eight model providers plus Brave Search and Resend.' },
-      { title: 'Identity & telemetry', description: 'Carries identity and usage telemetry for every project on the platform.' },
-      { title: 'Privacy-first intelligence', description: 'PII stripping and anomaly detection feed aggregate, minimum-N reporting — never per-student inference.' },
     ],
   },
   {
@@ -125,35 +93,6 @@ export const projects = [
     ],
   },
   {
-    id: 'club-gateway',
-    spec: 6,
-    title: 'Club Gateway',
-    caption: 'Found and run a club, end to end.',
-    category: 'Community',
-    status: 'In development',
-    bio: 'The enablement-and-governance layer for starting and running clubs — including guidance on how to found one. The deliverable school administration asked for, and itself built and hosted on Launchpad.',
-    techStack: ['Governance', 'Launchpad'],
-    workDescriptions: [
-      { title: 'Founding & governance', description: 'Tools and guidance to start a club and run it well, from formation through affiliation.' },
-      { title: 'Built on Launchpad', description: 'Ships on our own deploy platform — the studio using its own infrastructure.' },
-    ],
-  },
-  {
-    id: 'database',
-    spec: 7,
-    title: 'Database',
-    caption: 'Shared data and a competition question bank.',
-    category: 'Infrastructure',
-    status: 'In development',
-    bio: 'The shared data layer for the platform: user data plus a competition question bank that powers contest preparation across the studio.',
-    techStack: ['User data', 'Question bank'],
-    highlights: ['Competition bank: IOAI, CSP, NOIP, IOI, AMC, AIME'],
-    workDescriptions: [
-      { title: 'Shared data layer', description: 'A common store for user data used across every project.' },
-      { title: 'Competition bank', description: 'A curated question bank spanning IOAI, CSP, NOIP, IOI, AMC, AIME, and similar contests.' },
-    ],
-  },
-  {
     id: 'careerplanner',
     spec: 8,
     title: 'CareerPlanner',
@@ -168,37 +107,38 @@ export const projects = [
       { title: 'Career exploration', description: 'Guides students from coursework toward concrete career paths and next steps.' },
     ],
   },
+  // ── PLACEHOLDER ─────────────────────────────────────────────────────────
+  // Study and Session are stubs: title and spec number are real, the rest is
+  // scaffolding to fill in. Category and status below are guesses — set them
+  // before this goes public. See CONTENT.md.
   {
-    id: 'datasci-outreach',
+    id: 'study',
     spec: 9,
-    title: 'DataSci Outreach',
-    caption: 'A hands-on data-science outreach course.',
+    title: 'Study',
+    caption: 'TODO — one line on what Study does.',
     category: 'Education',
     status: 'Planned',
-    bio: 'A data-science teaching and outreach course that brings practical skills to more students. It deploys on Launchpad, so it follows once that platform opens.',
-    techStack: ['Data science', 'Curriculum'],
-    workDescriptions: [
-      { title: 'Outreach curriculum', description: 'A hands-on course built to teach data science and widen access to it.' },
-    ],
+    bio: 'TODO — a short paragraph on what Study is, who it is for, and why it exists.',
+    techStack: [],
+    workDescriptions: [],
   },
   {
-    id: 'competition-lists',
+    id: 'session',
     spec: 10,
-    title: 'Competition Lists',
-    caption: 'Curated competition lists and prep.',
+    title: 'Session',
+    caption: 'TODO — one line on what Session does.',
     category: 'Education',
-    status: 'In development',
-    bio: 'The competition-facing surface of the studio: curated lists and preparation for the contests the question bank feeds. What students actually browse and use to get ready.',
-    techStack: ['Curation', 'Prep'],
-    workDescriptions: [
-      { title: 'Curated lists', description: 'Hand-curated competition lists that point students to the right contests.' },
-      { title: 'Prep surface', description: 'The student-facing front end for preparation, backed by the shared question bank.' },
-    ],
+    status: 'Planned',
+    bio: 'TODO — a short paragraph on what Session is, who it is for, and why it exists.',
+    techStack: [],
+    workDescriptions: [],
   },
 ];
 
 // Per-spec colors — used by the chromatic SpecRing on team pages.
-// Ordered as a spectrum, so all 11 lit together read as a rainbow.
+// Keyed by spec number (stable across retirements), ordered as a spectrum so
+// the live specs read as a gradient when lit together. Retired spec numbers
+// keep their color in case the spec returns.
 export const specColors = {
   0: '#ff5a5f',
   1: '#ff8c42',
@@ -212,3 +152,9 @@ export const specColors = {
   9: '#e879f9',
   10: '#fb7185',
 };
+
+// Leads pointing at a retired spec are dropped, so the UI never renders a
+// dangling reference when a project leaves the roster above.
+const LIVE_SPECS = new Set(projects.map((p) => p.spec));
+export const liveLeads = (person) =>
+  Array.isArray(person.leads) ? person.leads.filter((l) => LIVE_SPECS.has(l.n)) : [];

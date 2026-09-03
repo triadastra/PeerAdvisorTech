@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { people } from '../data/people';
-import { projects } from '../data/projects';
+import { projects, liveLeads } from '../data/projects';
 import SpecRing from './SpecRing';
 import CharacterReveal from './CharacterReveal';
 import Contact from './Contact';
@@ -40,7 +40,8 @@ export default function PersonPage() {
     );
   }
 
-  const specs = person.leads === 'all' ? 'all' : Array.isArray(person.leads) ? person.leads.map((l) => l.n) : [];
+  const leads = liveLeads(person);
+  const specs = person.leads === 'all' ? 'all' : leads.map((l) => l.n);
   const bio = person.bio?.length ? person.bio : [person.insights];
   const derived = [
     ['Status', person.status === 'away' ? 'Away' : 'Active'],
@@ -102,7 +103,7 @@ export default function PersonPage() {
                   <p className="text-ink-200">Lead across all {projects.length} specs.</p>
                 ) : specs.length ? (
                   <div className="flex flex-wrap gap-2">
-                    {person.leads.map((l) => {
+                    {leads.map((l) => {
                       const s = specByNumber[l.n];
                       return (
                         <button

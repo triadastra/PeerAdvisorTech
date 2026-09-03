@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SpecRing from './SpecRing';
+import { liveLeads } from '../data/projects';
 
 const DURATION = 2900; // ms — the unlock, then settle into the bio page
 const RAINBOW =
@@ -21,7 +22,7 @@ export default function CharacterReveal({ person, onDone }) {
     };
   }, [onDone]);
 
-  const specs = person.leads === 'all' ? 'all' : Array.isArray(person.leads) ? person.leads.map((l) => l.n) : [];
+  const specs = person.leads === 'all' ? 'all' : liveLeads(person).map((l) => l.n);
 
   return (
     <motion.div

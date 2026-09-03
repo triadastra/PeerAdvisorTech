@@ -85,9 +85,11 @@ export default function ProjectDetail({ project, onBack, onSelectProject }) {
           {tier && <SpecRow label="Layer">{tier}</SpecRow>}
           <SpecRow label="Status">{status}</SpecRow>
           {affiliation && <SpecRow label="Affiliation">{affiliation}</SpecRow>}
-          <SpecRow label="Stack">
-            <span className="font-mono text-sm text-ink-200">{techStack.join('  ·  ')}</span>
-          </SpecRow>
+          {techStack.length > 0 && (
+            <SpecRow label="Stack">
+              <span className="font-mono text-sm text-ink-200">{techStack.join('  ·  ')}</span>
+            </SpecRow>
+          )}
         </dl>
 
         {/* overview */}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { people } from '../data/people';
-import { projects } from '../data/projects';
+import { projects, liveLeads } from '../data/projects';
 import SpecRing from './SpecRing';
 import Contact from './Contact';
 
@@ -12,7 +12,8 @@ const specByNumber = Object.fromEntries(projects.map((p) => [p.spec, p]));
 // First click expands the row (which specs they lead + a summary).
 // Second click — "Open profile →" — goes inside to their page.
 function PersonRow({ person, open, onToggle, onOpen, onSpec }) {
-  const specs = person.leads === 'all' ? 'all' : Array.isArray(person.leads) ? person.leads.map((l) => l.n) : [];
+  const leads = liveLeads(person);
+  const specs = person.leads === 'all' ? 'all' : leads.map((l) => l.n);
 
   return (
     <div className="border-t border-ink-800 last:border-b">
@@ -57,9 +58,9 @@ function PersonRow({ person, open, onToggle, onOpen, onSpec }) {
                 </div>
                 <p className="max-w-2xl text-ink-300 md:text-lg leading-relaxed">{person.insights}</p>
 
-                {Array.isArray(person.leads) && person.leads.length > 0 && (
+                {leads.length > 0 && (
                   <div className="mt-6 flex flex-wrap gap-2">
-                    {person.leads.map((l) => {
+                    {leads.map((l) => {
                       const s = specByNumber[l.n];
                       return (
                         <button
