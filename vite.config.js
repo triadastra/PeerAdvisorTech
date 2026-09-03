@@ -11,6 +11,8 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': { target: 'http://localhost:3001', changeOrigin: true },
+      // Git smart-HTTP for per-assignment repos (clone / fetch / push in dev).
+      '/git': { target: 'http://localhost:3001', changeOrigin: true },
     },
   },
   preview: {

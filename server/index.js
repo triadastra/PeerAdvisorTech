@@ -13,13 +13,27 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { data, save } from './store.js';
 import { hashPassword, verifyPassword, signToken, verifyToken, vidFor } from './auth.js';
+import { buildTracks } from './seed.js';
+import { ensureRepo, repoSlug, cloneUrl, gitHttpBackend, gitAvailable } from './git.js';
+
+// Static group/task tracks + a nodeId → { track, node } lookup.
+const TRACKS = buildTracks();
+const NODE_INDEX = new Map();
+for (const t of TRACKS) for (const n of t.nodes) NODE_INDEX.set(n.id, { track: t, node: n });
+
+const RECRUIT_MS = 24 * 60 * 60 * 1000; // 24h recruiting window
+const loginOf = (u) => (u?.email ? u.email.split('@')[0] : (u?.name || 'member').toLowerCase().replace(/[^a-z0-9]+/g, '')) || 'member';
+const nameOf = (id) => data.users.find((u) => u.id === id)?.name || 'Member';
+const effectiveStatus = (a) => (a.status === 'done' ? 'done' : (Date.now() > a.recruiting_ends_at ? 'active' : 'recruiting'));
 
 const here = dirname(fileURLToPath(import.meta.url));
 const ENV_FILE = join(here, '..', '.env');
 if (existsSync(ENV_FILE)) process.loadEnvFile(ENV_FILE);
 
 const DIST = join(here, '..', 'dist');
-const PORT = process.env.PORT || process.env.API_PORT || (process.env.NODE_ENV === 'production' ? 3200 : 3001);
+// API_PORT wins over the generic PORT so a dev launcher setting PORT (for the
+// web server) can't accidentally rebind the API on top of it.
+const PORT = process.env.API_PORT || process.env.PORT || (process.env.NODE_ENV === 'production' ? 3200 : 3001);
 const COOKIE = 'patd_session';
 const SECURE = process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true';
 
@@ -260,6 +274,140 @@ app.delete('/api/events/:id', requireAuth, (req, res) => {
   save();
   res.status(204).end();
 });
+
+// ── Tracks (groups/tasks to apply to) ────────────────────────────────────────
+app.get('/api/tracks', requireAuth, (_req, res) => {
+  res.json(TRACKS);
+});
+
+// ── Assignments (claim a node → "Work on it", 24h recruiting, git repo) ───────
+function publicAssignment(a, req) {
+  const idx = NODE_INDEX.get(a.node_id);
+  return {
+    id: a.id,
+    track_id: a.track_id,
+    node_id: a.node_id,
+    node_title: idx?.node.title || a.node_title || a.node_id,
+    track_title: idx?.track.title || a.track_id,
+    spec: idx?.track.spec ?? null,
+    color: idx?.track.color || '#605e58',
+    owner_id: a.owner_id,
+    owner_name: nameOf(a.owner_id),
+    member_ids: a.member_ids,
+    members: a.member_ids.map(nameOf),
+    status: effectiveStatus(a),
+    recruiting_ends_at: a.recruiting_ends_at,
+    created_at: a.created_at,
+    repo: a.repo,
+    // The clone URL carries the *requesting* member's login as the username.
+    clone_url: a.repo ? cloneUrl(req, a.repo, loginOf(req.user)) : null,
+  };
+}
+
+app.get('/api/assignments', requireAuth, (req, res) => {
+  const rows = [...data.assignments]
+    .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
+    .map((a) => publicAssignment(a, req));
+  res.json(rows);
+});
+
+// Work on it — claim a node. Idempotent per (user, node): returns the existing
+// claim if the user already joined it.
+app.post('/api/assignments', requireAuth, (req, res) => {
+  const nodeId = String(req.body?.node_id || '');
+  const idx = NODE_INDEX.get(nodeId);
+  if (!idx) return res.status(400).json({ error: 'Unknown node.' });
+
+  const existing = data.assignments.find((a) => a.node_id === nodeId && a.member_ids.includes(req.user.id));
+  if (existing) return res.status(200).json(publicAssignment(existing, req));
+
+  // If a claim is already open on this node, join it instead of forking a new one.
+  const open = data.assignments.find((a) => a.node_id === nodeId && effectiveStatus(a) === 'recruiting');
+  if (open) {
+    open.member_ids.push(req.user.id);
+    save();
+    return res.status(200).json(publicAssignment(open, req));
+  }
+
+  const id = crypto.randomUUID();
+  const slug = repoSlug({ trackId: idx.track.id, nodeKey: idx.node.key, id });
+  let repo = null;
+  if (gitAvailable()) {
+    try { ensureRepo(slug, { title: `${idx.track.title} — ${idx.node.title}`, login: loginOf(req.user) }); repo = slug; }
+    catch (e) { console.error('repo init failed:', e instanceof Error ? e.message : e); }
+  }
+  const assignment = {
+    id,
+    track_id: idx.track.id,
+    node_id: nodeId,
+    node_title: idx.node.title,
+    owner_id: req.user.id,
+    member_ids: [req.user.id],
+    status: 'recruiting',
+    recruiting_ends_at: Date.now() + RECRUIT_MS,
+    repo,
+    created_at: new Date().toISOString(),
+  };
+  data.assignments.push(assignment);
+  save();
+  res.status(201).json(publicAssignment(assignment, req));
+});
+
+// Join a friend's still-recruiting claim on the same node.
+app.post('/api/assignments/:id/join', requireAuth, (req, res) => {
+  const a = data.assignments.find((x) => x.id === req.params.id);
+  if (!a) return res.status(404).json({ error: 'Not found.' });
+  if (effectiveStatus(a) !== 'recruiting') return res.status(409).json({ error: 'Recruiting for this step has closed.' });
+  if (!a.member_ids.includes(req.user.id)) { a.member_ids.push(req.user.id); save(); }
+  res.json(publicAssignment(a, req));
+});
+
+// Leave / drop a claim (owner leaving removes it entirely).
+app.delete('/api/assignments/:id', requireAuth, (req, res) => {
+  const i = data.assignments.findIndex((x) => x.id === req.params.id);
+  if (i === -1) return res.status(404).json({ error: 'Not found.' });
+  const a = data.assignments[i];
+  if (a.owner_id === req.user.id) data.assignments.splice(i, 1);
+  else a.member_ids = a.member_ids.filter((m) => m !== req.user.id);
+  save();
+  res.status(204).end();
+});
+
+// ── Forum ─────────────────────────────────────────────────────────────────────
+app.get('/api/forum', requireAuth, (_req, res) => {
+  const rows = [...data.forum]
+    .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''))
+    .map((p) => ({ ...p, author: nameOf(p.user_id) }));
+  res.json(rows);
+});
+
+app.post('/api/forum', requireAuth, (req, res) => {
+  const body = String(req.body?.body || '').trim().slice(0, 2000);
+  if (!body) return res.status(400).json({ error: 'Say something first.' });
+  const post = {
+    id: crypto.randomUUID(),
+    user_id: req.user.id,
+    body,
+    track_id: req.body?.track_id ? String(req.body.track_id).slice(0, 60) : null,
+    created_at: new Date().toISOString(),
+  };
+  data.forum.push(post);
+  save();
+  res.status(201).json({ ...post, author: nameOf(post.user_id) });
+});
+
+app.delete('/api/forum/:id', requireAuth, (req, res) => {
+  const i = data.forum.findIndex((p) => p.id === req.params.id);
+  if (i === -1) return res.status(404).json({ error: 'Not found.' });
+  if (data.forum[i].user_id !== req.user.id) return res.status(403).json({ error: 'Not your post.' });
+  data.forum.splice(i, 1);
+  save();
+  res.status(204).end();
+});
+
+// ── Git smart-HTTP (per-assignment repos: clone / fetch / push) ───────────────
+// Open in this self-hosted setup; the clone URL carries the member's login.
+app.use('/git', gitHttpBackend);
 
 // ── Static front-end (production) + SPA fallback ──────────────────────────────
 if (existsSync(DIST)) {
