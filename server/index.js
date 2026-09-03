@@ -95,9 +95,25 @@ function rateLimit(attempts, limit, message) {
 const applicationAttempts = new Map();
 const applicationRateLimit = rateLimit(applicationAttempts, 5, 'Too many submissions. Please wait a minute and try again.');
 const assignmentAttempts = new Map();
-const assignmentRateLimit = rateLimit(assignmentAttempts, 30, 'Too many assignment requests. Please wait a minute and try again.');
+function assignmentRateLimit(req, res, next) {
+  const key = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const recent = (assignmentAttempts.get(key) || []).filter((time) => now - time < 60_000);
+  if (recent.length >= 30) return res.status(429).json({ error: 'Too many assignment requests. Please wait a minute and try again.' });
+  recent.push(now);
+  assignmentAttempts.set(key, recent);
+  next();
+}
 const gitAttempts = new Map();
-const gitRateLimit = rateLimit(gitAttempts, 120, 'Too many git requests. Please wait a minute and try again.');
+function gitRateLimit(req, res, next) {
+  const key = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const recent = (gitAttempts.get(key) || []).filter((time) => now - time < 60_000);
+  if (recent.length >= 120) return res.status(429).json({ error: 'Too many git requests. Please wait a minute and try again.' });
+  recent.push(now);
+  gitAttempts.set(key, recent);
+  next();
+}
 
 // ── Public member applications ───────────────────────────────────────────────
 app.post('/api/contact/application', applicationRateLimit, async (req, res) => {
