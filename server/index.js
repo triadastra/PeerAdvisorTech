@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import crypto from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -80,40 +81,9 @@ function requireAuth(req, res, next) {
 
 const isEmail = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
 
-function rateLimit(attempts, limit, message) {
-  return (req, res, next) => {
-    const key = req.ip || req.socket.remoteAddress || 'unknown';
-    const now = Date.now();
-    const recent = (attempts.get(key) || []).filter((time) => now - time < 60_000);
-    if (recent.length >= limit) return res.status(429).json({ error: message });
-    recent.push(now);
-    attempts.set(key, recent);
-    next();
-  };
-}
-
-const applicationAttempts = new Map();
-const applicationRateLimit = rateLimit(applicationAttempts, 5, 'Too many submissions. Please wait a minute and try again.');
-const assignmentAttempts = new Map();
-function assignmentRateLimit(req, res, next) {
-  const key = req.ip || req.socket.remoteAddress || 'unknown';
-  const now = Date.now();
-  const recent = (assignmentAttempts.get(key) || []).filter((time) => now - time < 60_000);
-  if (recent.length >= 30) return res.status(429).json({ error: 'Too many assignment requests. Please wait a minute and try again.' });
-  recent.push(now);
-  assignmentAttempts.set(key, recent);
-  next();
-}
-const gitAttempts = new Map();
-function gitRateLimit(req, res, next) {
-  const key = req.ip || req.socket.remoteAddress || 'unknown';
-  const now = Date.now();
-  const recent = (gitAttempts.get(key) || []).filter((time) => now - time < 60_000);
-  if (recent.length >= 120) return res.status(429).json({ error: 'Too many git requests. Please wait a minute and try again.' });
-  recent.push(now);
-  gitAttempts.set(key, recent);
-  next();
-}
+const applicationRateLimit = rateLimit({ windowMs: 60_000, limit: 5, message: { error: 'Too many submissions. Please wait a minute and try again.' } });
+const assignmentRateLimit = rateLimit({ windowMs: 60_000, limit: 30, message: { error: 'Too many assignment requests. Please wait a minute and try again.' } });
+const gitRateLimit = rateLimit({ windowMs: 60_000, limit: 120, message: { error: 'Too many git requests. Please wait a minute and try again.' } });
 
 // ── Public member applications ───────────────────────────────────────────────
 app.post('/api/contact/application', applicationRateLimit, async (req, res) => {
