@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import crypto from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -80,16 +81,9 @@ function requireAuth(req, res, next) {
 
 const isEmail = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
 
-const applicationAttempts = new Map();
-function applicationRateLimit(req, res, next) {
-  const key = req.ip || req.socket.remoteAddress || 'unknown';
-  const now = Date.now();
-  const recent = (applicationAttempts.get(key) || []).filter((time) => now - time < 60_000);
-  if (recent.length >= 5) return res.status(429).json({ error: 'Too many submissions. Please wait a minute and try again.' });
-  recent.push(now);
-  applicationAttempts.set(key, recent);
-  next();
-}
+const applicationRateLimit = rateLimit({ windowMs: 60_000, limit: 5, message: { error: 'Too many submissions. Please wait a minute and try again.' } });
+const assignmentRateLimit = rateLimit({ windowMs: 60_000, limit: 30, message: { error: 'Too many assignment requests. Please wait a minute and try again.' } });
+const gitRateLimit = rateLimit({ windowMs: 60_000, limit: 120, message: { error: 'Too many git requests. Please wait a minute and try again.' } });
 
 // ── Public member applications ───────────────────────────────────────────────
 app.post('/api/contact/application', applicationRateLimit, async (req, res) => {
@@ -313,7 +307,7 @@ app.get('/api/assignments', requireAuth, (req, res) => {
 
 // Work on it — claim a node. Idempotent per (user, node): returns the existing
 // claim if the user already joined it.
-app.post('/api/assignments', requireAuth, (req, res) => {
+app.post('/api/assignments', requireAuth, assignmentRateLimit, (req, res) => {
   const nodeId = String(req.body?.node_id || '');
   const idx = NODE_INDEX.get(nodeId);
   if (!idx) return res.status(400).json({ error: 'Unknown node.' });
@@ -407,7 +401,7 @@ app.delete('/api/forum/:id', requireAuth, (req, res) => {
 
 // ── Git smart-HTTP (per-assignment repos: clone / fetch / push) ───────────────
 // Open in this self-hosted setup; the clone URL carries the member's login.
-app.use('/git', gitHttpBackend);
+app.use('/git', gitRateLimit, gitHttpBackend);
 
 // ── Static front-end (production) + SPA fallback ──────────────────────────────
 if (existsSync(DIST)) {
