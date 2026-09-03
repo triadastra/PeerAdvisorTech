@@ -23,3 +23,13 @@ export const deleteTask = (id) => api.deleteTask(id);
 
 export const createEvent = (body) => api.createEvent(body);
 export const deleteEvent = (id) => api.deleteEvent(id);
+
+export const listTracks = () => safe(api.tracks());
+export const listAssignments = () => safe(api.assignments());
+export const createAssignment = (body) => api.createAssignment(body);
+export const joinAssignment = (id) => api.joinAssignment(id);
+export const leaveAssignment = (id) => api.leaveAssignment(id);
+
+export const listForum = () => safe(api.forum());
+export const createPost = (body) => api.createPost(body);
+export const deletePost = (id) => api.deletePost(id);

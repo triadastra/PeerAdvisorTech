@@ -55,4 +55,15 @@ export const api = {
   events: () => request('/events'),
   createEvent: (body) => request('/events', { method: 'POST', body }),
   deleteEvent: (id) => request(`/events/${id}`, { method: 'DELETE' }),
+
+  tracks: () => request('/tracks'),
+
+  assignments: () => request('/assignments'),
+  createAssignment: (body) => request('/assignments', { method: 'POST', body }),
+  joinAssignment: (id) => request(`/assignments/${id}/join`, { method: 'POST' }),
+  leaveAssignment: (id) => request(`/assignments/${id}`, { method: 'DELETE' }),
+
+  forum: () => request('/forum'),
+  createPost: (body) => request('/forum', { method: 'POST', body }),
+  deletePost: (id) => request(`/forum/${id}`, { method: 'DELETE' }),
 };
