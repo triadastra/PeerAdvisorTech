@@ -3,25 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { people } from '../data/people';
 import { projects } from '../data/projects';
-import SpecRing from './SpecRing';
+import ProfileRing from './ProfileRing';
+import { rolesFor, TRAFFIC_ROLES } from '../data/trafficRoles';
 import Contact from './Contact';
 
 const pad = (n) => String(n).padStart(2, '0');
 const specByNumber = Object.fromEntries(projects.map((p) => [p.spec, p]));
+const currentPeople = people.filter((p) => p.status !== 'historical');
+const historicalPeople = people.filter((p) => p.status === 'historical');
 
 // First click expands the row (which specs they lead + a summary).
 // Second click — "Open profile →" — goes inside to their page.
 function PersonRow({ person, open, onToggle, onOpen, onSpec }) {
-  const specs = person.leads === 'all' ? 'all' : Array.isArray(person.leads) ? person.leads.map((l) => l.n) : [];
+  const trafficRoles = rolesFor(person);
 
   return (
     <div className="border-t border-ink-800 last:border-b">
       <button onClick={onToggle} className="group w-full flex items-center gap-4 md:gap-6 py-5 text-left" aria-expanded={open}>
-        <span
-          className="w-10 h-10 shrink-0 flex items-center justify-center font-mono text-xs border border-ink-700 text-ink-300"
-        >
-          {person.avatar}
-        </span>
+        <ProfileRing person={person} shape="box" className="team-profile-frame w-10 h-10 shrink-0" />
         <span className="flex items-baseline gap-2 min-w-0">
           <span className="font-display text-xl md:text-2xl font-medium text-ink-100 group-hover:text-ink-50 transition-colors truncate">
             {person.name}
@@ -47,13 +46,19 @@ function PersonRow({ person, open, onToggle, onOpen, onSpec }) {
           >
             <div className="pb-12 md:pl-[64px] grid md:grid-cols-[auto_1fr] gap-8 items-start">
               <div className="flex flex-col items-center gap-2">
-                <SpecRing specs={specs} stroke={11} className="w-28 h-28" />
-                <span className="kicker text-ink-500">{specs === 'all' ? `all ${projects.length}` : specs.length} specs</span>
+                <ProfileRing person={person} className="w-28 h-28" />
               </div>
               <div>
                 <div className="kicker text-acid-500 mb-3">
                   Team · ’{person.year}
                   {person.status === 'away' ? ' · Away' : ''}
+                </div>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {trafficRoles.filter((role) => TRAFFIC_ROLES[role].label).map((role) => (
+                    <span key={role} className="kicker border px-2.5 py-1" style={{ color: TRAFFIC_ROLES[role].color, borderColor: `${TRAFFIC_ROLES[role].color}66` }}>
+                      {TRAFFIC_ROLES[role].label}
+                    </span>
+                  ))}
                 </div>
                 <p className="max-w-2xl text-ink-300 md:text-lg leading-relaxed">{person.insights}</p>
 
@@ -134,11 +139,12 @@ export default function People() {
             AI Central.
           </h1>
           <p className="mt-6 max-w-2xl text-ink-300 text-lg">
-            The team in chronological order, tagged by class year. Tap to see the specs they’ve joined; open a profile to go inside.
+            The current team in chronological order, followed by the historical directory inherited from StandardCAS™ SHSID.
           </p>
         </div>
 
-        <Group index="01" label="Team" list={people} open={open} setOpen={setOpen} onOpen={onOpen} onSpec={onSpec} />
+        <Group index="01" label="Team" list={currentPeople} open={open} setOpen={setOpen} onOpen={onOpen} onSpec={onSpec} />
+        <Group index="02" label="Historical directory · Inherited from StandardCAS™ SHSID" list={historicalPeople} open={open} setOpen={setOpen} onOpen={onOpen} onSpec={onSpec} />
       </div>
 
       <Contact />

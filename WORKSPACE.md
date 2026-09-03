@@ -61,5 +61,5 @@ can only **create/edit/delete their own**.
 `server/store.js` is the only place that touches storage, and `src/lib/api.js`
 is the only place the front-end talks to it. To move onto Postgres, or to front
 this with the real **Spine / VID** identity service, reimplement those two
-seams — the UI doesn't change. Static content (the eleven specs, the team, the
+seams — the UI doesn't change. Static content (the eight projects, the team, the
 agents, the roadmap) still lives in `src/data/*` and is edited there.
