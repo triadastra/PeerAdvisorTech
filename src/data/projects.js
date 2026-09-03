@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────
-//  PROJECTS — the public-facing roster (AI Central, Specs 00–10).
+//  PROJECTS — the public-facing roster (AI Central, Projects 01–08).
 //  Sanitized: internal details (pricing, ownership, infra cost, security
 //  status) live only in the handoff doc, never here.
 //  Team/leadership is NOT stored here — it derives from ./people.js
@@ -9,7 +9,7 @@
 export const projects = [
   {
     id: 'club-alliances',
-    spec: 0,
+    spec: 1,
     title: 'Club Alliances',
     caption: 'Club-to-club alliances under mutual-benefit MOUs.',
     category: 'Community',
@@ -23,7 +23,7 @@ export const projects = [
   },
   {
     id: 'fyona',
-    spec: 1,
+    spec: 2,
     title: 'Fyona®',
     caption: 'An AI magazine & layout studio — design, preview, export.',
     category: 'Platform',
@@ -45,13 +45,14 @@ export const projects = [
   },
   {
     id: 'synonance',
-    spec: 2,
+    spec: 3,
     title: 'Synonance',
     caption: 'A RAG study chatbot grounded in real curriculum.',
     category: 'AI / ML',
     tier: 'Core',
     affiliation: 'StandardCAS™',
     status: 'Production',
+    teamOrder: ['Celsia Fan', 'Pete Chen', 'Gordon Huang'],
     bio: 'A retrieval-grounded study assistant (“Syno”) built on a custom Super RAG + MCP pipeline. It is grounded in real school curriculum and IB mock exams, and answers across tiered speeds and depths so students get the right level of help.',
     techStack: ['Qwen-3.6', 'Super RAG', 'MCP', 'GCP'],
     highlights: [
@@ -66,96 +67,51 @@ export const projects = [
     ],
   },
   {
-    id: 'the-spine',
-    spec: 3,
-    title: 'The Spine',
-    caption: 'The routing, identity, and telemetry backbone.',
-    category: 'Infrastructure',
-    tier: 'Core',
-    affiliation: 'StandardCAS™',
-    status: 'In development',
-    bio: 'The infrastructure backbone every project runs on. The Spine routes intelligently across many model providers and services, carries identity and telemetry, and includes an intelligence layer for privacy-first, aggregate-only reporting.',
-    techStack: ['API gateway', 'Multi-LLM routing', 'Brave Search', 'Resend'],
-    highlights: [
-      'Routes across 8 model providers plus search and email',
-      'Identity, telemetry, and anomaly detection',
-      'Privacy-first: aggregate-only reporting, no per-student inference',
-    ],
-    workDescriptions: [
-      { title: 'Super Relay routing', description: 'A unified gateway that routes requests across eight model providers plus Brave Search and Resend.' },
-      { title: 'Identity & telemetry', description: 'Carries identity and usage telemetry for every project on the platform.' },
-      { title: 'Privacy-first intelligence', description: 'PII stripping and anomaly detection feed aggregate, minimum-N reporting — never per-student inference.' },
-    ],
-  },
-  {
     id: 'launchpad',
     spec: 4,
     title: 'Launchpad™',
-    caption: 'Ship your club’s app — build, deploy, host.',
+    caption: 'Build, deploy, host, route, and store — one platform.',
     category: 'Platform',
     tier: 'Core',
     affiliation: 'StandardCAS™',
     status: 'Pre-launch',
-    bio: 'A build-and-deploy system that lets clubs ship their own applications, with Git, an interactive terminal, and containerized environments. Because it runs student-authored code, it is built around full resource isolation.',
-    techStack: ['Docker', 'Git', 'PTY', 'CI/CD'],
+    teamOrder: ['Celsia Fan', 'Rick Yu', 'Pete Chen', 'Gordon Huang', 'Jessica Qin'],
+    bio: 'The unified application platform for AI Central: build-and-deploy tooling, The Spine’s routing and identity infrastructure, and the shared database layer. Clubs can ship isolated applications while the platform handles model routing, telemetry, privacy, user data, and competition content behind the scenes.',
+    techStack: ['Docker', 'Git', 'PTY', 'CI/CD', 'API gateway', 'Multi-LLM routing', 'Shared data'],
     highlights: [
       'Git, PTY, and Docker-based deploys',
       'Full resource isolation for untrusted code',
-      'Lets clubs build and host their own apps',
+      'Routes across 8 model providers plus search and email',
+      'Shared user data and competition question bank',
     ],
     workDescriptions: [
       { title: 'Build & deploy', description: 'A Netlify-style pipeline with Git, an interactive PTY, and Docker so clubs can ship apps end to end.' },
       { title: 'Resource isolation', description: 'Every app runs fully isolated, since the platform executes untrusted student code.' },
+      { title: 'The Spine', description: 'Integrated routing, identity, telemetry, PII stripping, and privacy-first aggregate reporting across model providers and services.' },
+      { title: 'Database', description: 'A shared data layer for platform user data and the competition question bank spanning IOAI, CSP, NOIP, IOI, AMC, AIME, and related contests.' },
     ],
   },
   {
     id: 'sharedspace',
     spec: 5,
     title: 'SharedSpace',
-    caption: 'A searchable directory of student talent.',
+    caption: 'Discover people, found clubs, and run them well.',
     category: 'Community',
     tier: 'Core',
     affiliation: 'StandardCAS™',
     status: 'In development',
-    bio: 'A talent directory that makes skilled students discoverable — the person axis of AI Central. A searchable index built to surface the right people for the right work, at scale.',
-    techStack: ['Search', 'Directory'],
+    bio: 'The people-and-clubs layer of AI Central. SharedSpace combines a searchable student talent directory with Club Gateway’s tools and guidance for founding, affiliating, and operating campus clubs.',
+    techStack: ['Search', 'Directory', 'Club governance', 'Launchpad'],
     workDescriptions: [
       { title: 'Talent directory', description: 'A searchable index that surfaces students by skill, making talent discoverable across campus.' },
       { title: 'Built for scale', description: 'Designed as a directory rather than a manual connector so it stays useful as it grows.' },
-    ],
-  },
-  {
-    id: 'club-gateway',
-    spec: 6,
-    title: 'Club Gateway',
-    caption: 'Found and run a club, end to end.',
-    category: 'Community',
-    status: 'In development',
-    bio: 'The enablement-and-governance layer for starting and running clubs — including guidance on how to found one. The deliverable school administration asked for, and itself built and hosted on Launchpad.',
-    techStack: ['Governance', 'Launchpad'],
-    workDescriptions: [
-      { title: 'Founding & governance', description: 'Tools and guidance to start a club and run it well, from formation through affiliation.' },
-      { title: 'Built on Launchpad', description: 'Ships on our own deploy platform — the studio using its own infrastructure.' },
-    ],
-  },
-  {
-    id: 'database',
-    spec: 7,
-    title: 'Database',
-    caption: 'Shared data and a competition question bank.',
-    category: 'Infrastructure',
-    status: 'In development',
-    bio: 'The shared data layer for the platform: user data plus a competition question bank that powers contest preparation across the studio.',
-    techStack: ['User data', 'Question bank'],
-    highlights: ['Competition bank: IOAI, CSP, NOIP, IOI, AMC, AIME'],
-    workDescriptions: [
-      { title: 'Shared data layer', description: 'A common store for user data used across every project.' },
-      { title: 'Competition bank', description: 'A curated question bank spanning IOAI, CSP, NOIP, IOI, AMC, AIME, and similar contests.' },
+      { title: 'Club Gateway', description: 'Guidance and governance tools for starting a club, running it well, and moving through affiliation.' },
+      { title: 'Built on Launchpad', description: 'The club gateway ships on the studio’s own application platform.' },
     ],
   },
   {
     id: 'careerplanner',
-    spec: 8,
+    spec: 6,
     title: 'CareerPlanner',
     caption: 'Plan a path from coursework to career.',
     category: 'Education',
@@ -170,7 +126,7 @@ export const projects = [
   },
   {
     id: 'datasci-outreach',
-    spec: 9,
+    spec: 7,
     title: 'DataSci Outreach',
     caption: 'A hands-on data-science outreach course.',
     category: 'Education',
@@ -183,11 +139,12 @@ export const projects = [
   },
   {
     id: 'competition-lists',
-    spec: 10,
+    spec: 8,
     title: 'Competition Lists',
     caption: 'Curated competition lists and prep.',
     category: 'Education',
     status: 'In development',
+    teamOrder: ['Brian Deng', 'Rick Yu'],
     bio: 'The competition-facing surface of the studio: curated lists and preparation for the contests the question bank feeds. What students actually browse and use to get ready.',
     techStack: ['Curation', 'Prep'],
     workDescriptions: [
@@ -200,15 +157,12 @@ export const projects = [
 // Per-spec colors — used by the chromatic SpecRing on team pages.
 // Ordered as a spectrum, so all 11 lit together read as a rainbow.
 export const specColors = {
-  0: '#ff5a5f',
-  1: '#ff8c42',
-  2: '#ffc145',
-  3: '#c8f135',
+  1: '#ff5a5f',
+  2: '#ff8c42',
+  3: '#ffc145',
   4: '#4ade80',
   5: '#2dd4bf',
   6: '#38bdf8',
-  7: '#6366f1',
-  8: '#a855f7',
-  9: '#e879f9',
-  10: '#fb7185',
+  7: '#a855f7',
+  8: '#fb7185',
 };

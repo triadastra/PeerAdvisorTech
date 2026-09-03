@@ -9,13 +9,13 @@ import { people } from './people';
 export const site = {
   name: 'Peer Advisor Tech Department',
   shortName: 'PATD',
-  founded: 2022,
+  founded: 2026,
 
   // Hero
-  kicker: 'AI Central · Student Engineering Studio',
+  kicker: 'School Board Service on Technological Project Maintenance and Development',
   headline: ['We build the software', 'student life runs on.'],
   lede:
-    'Peer Advisor Tech Department is a student-run engineering studio. AI Central is what we’ve built: eleven connected projects — from an AI design studio to the infrastructure beneath them — shipping production software the whole campus uses, and training the people who build it.',
+    'Peer Advisor Tech Department is a student-run engineering studio. AI Central is what we’ve built: eight connected projects — from an AI design studio to the infrastructure beneath them — shipping production software the whole campus uses, and training the people who build it.',
 
   // Top navigation. Items with `route` navigate; items with `target` scroll to a
   // section on the home page.
@@ -56,6 +56,7 @@ export const site = {
 
   footerNote: 'A student-run engineering studio — the team behind AI Central.',
   footerCredit: 'Powered by StandardCAS™',
+  sponsors: ['StandardCAS™ Global', 'Indexademics', 'Sustainable Economics Club', 'Data Science Club'],
 };
 
 // ─── Derived, honest stats (computed from real data — never hardcode counts) ──
@@ -64,7 +65,7 @@ const yearsActive = Math.max(1, new Date().getFullYear() - site.founded);
 
 export const siteStats = [
   { value: projects.length, label: 'Projects' },
-  { value: people.length, label: 'Builders' },
+  { value: people.filter((p) => p.status !== 'historical').length, label: 'Builders' },
   { value: categories.size, label: 'Disciplines' },
   { value: yearsActive, label: 'Years operating' },
 ];

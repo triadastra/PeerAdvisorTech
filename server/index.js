@@ -15,6 +15,9 @@ import { data, save } from './store.js';
 import { hashPassword, verifyPassword, signToken, verifyToken, vidFor } from './auth.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
+const ENV_FILE = join(here, '..', '.env');
+if (existsSync(ENV_FILE)) process.loadEnvFile(ENV_FILE);
+
 const DIST = join(here, '..', 'dist');
 const PORT = process.env.PORT || process.env.API_PORT || (process.env.NODE_ENV === 'production' ? 3200 : 3001);
 const COOKIE = 'patd_session';
@@ -62,6 +65,81 @@ function requireAuth(req, res, next) {
 }
 
 const isEmail = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
+
+const applicationAttempts = new Map();
+function applicationRateLimit(req, res, next) {
+  const key = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const recent = (applicationAttempts.get(key) || []).filter((time) => now - time < 60_000);
+  if (recent.length >= 5) return res.status(429).json({ error: 'Too many submissions. Please wait a minute and try again.' });
+  recent.push(now);
+  applicationAttempts.set(key, recent);
+  next();
+}
+
+// ── Public member applications ───────────────────────────────────────────────
+app.post('/api/contact/application', applicationRateLimit, async (req, res) => {
+  const name = String(req.body?.name || '').trim().slice(0, 120);
+  const year = String(req.body?.year || '').trim().slice(0, 4);
+  const email = String(req.body?.email || '').trim().toLowerCase().slice(0, 254);
+  const focus = String(req.body?.focus || '').trim().slice(0, 500);
+  const about = String(req.body?.about || '').trim().slice(0, 3000);
+  const specs = Array.isArray(req.body?.specs) ? req.body.specs.map(String).slice(0, 20) : [];
+  const entry = String(req.body?.entry || '').trim().slice(0, 5000);
+
+  if (!name) return res.status(400).json({ error: 'Name is required.' });
+  if (!/^\d{2,4}$/.test(year)) return res.status(400).json({ error: 'Enter a valid class year.' });
+  if (!isEmail(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
+
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM_EMAIL;
+  const to = process.env.RESEND_TO_EMAIL || 'patech@standardcas.org';
+  if (!apiKey || !from) return res.status(503).json({ error: 'Email delivery is not configured yet.' });
+
+  const text = [
+    `Name: ${name}`,
+    `Class: ’${year}`,
+    `Email: ${email}`,
+    `Focus: ${focus || '—'}`,
+    `Interested specs: ${specs.join(', ') || '—'}`,
+    '',
+    'About:',
+    about || '—',
+    '',
+    '--- people.js entry ---',
+    entry || '—',
+  ].join('\n');
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': `application-${crypto.randomUUID()}`,
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        reply_to: email,
+        subject: `New member application — ${name}`,
+        text,
+      }),
+    });
+
+    if (!response.ok) {
+      const details = await response.json().catch(() => null);
+      console.error('Resend rejected application email:', response.status, details?.message || details?.name || 'Unknown error');
+      return res.status(502).json({ error: 'Email delivery failed. Please try again shortly.' });
+    }
+
+    const result = await response.json();
+    res.status(201).json({ ok: true, id: result.id });
+  } catch (error) {
+    console.error('Resend application email failed:', error instanceof Error ? error.message : error);
+    res.status(502).json({ error: 'Email delivery failed. Please try again shortly.' });
+  }
+});
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 app.post('/api/auth/register', (req, res) => {

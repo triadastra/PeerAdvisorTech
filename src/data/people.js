@@ -1,116 +1,99 @@
 // ─────────────────────────────────────────────────────────────────────────
 //  PEOPLE — the single source of truth for the team.
 //  Display order, class years, status, and spec leadership all live here.
-//  Spec pages DERIVE their team from this file (teamForSpec), so "Celsia
-//  leads everything" stays true automatically. See CONTENT.md.
+//  Spec pages derive their teams from this file (teamForSpec), keeping project
+//  membership and profile assignments in one source of truth. See CONTENT.md.
 // ─────────────────────────────────────────────────────────────────────────
 
 export const people = [
   {
     id: 'celsia-fan', name: 'Celsia Fan', year: '26', avatar: 'CF',
     status: 'active',
+    trafficRoles: ['core', 'dev', 'affiliations'],
     title: 'Head, PA Tech · SHSID',
-    leads: 'all',
+    leads: [
+      { n: 1, role: 'Lead' },
+      { n: 2, role: 'Lead' },
+      { n: 3, role: 'Team' },
+      { n: 4, role: 'Team' },
+      { n: 5, role: 'Team' },
+      { n: 6, role: 'Lead' },
+      { n: 7, role: 'Team' },
+    ],
     insights:
-      'Founder and Head of PA Tech and the architect of AI Central — she leads every spec and owns the platform’s architecture, the StandardCAS-native core, and the roadmap.',
+      'Founder and Technical Lead of PA Tech, building the SaaS and AIaaS layer used by SHSID’s Peer Advisor program.',
     headline:
-      'Student technologist and AI/ML researcher — Legacy Founder and Head of the PA Tech Department at SHSID, and principal architect of AI Central.',
+      'Founder & Technical Lead, Peer Advisor Technology Department · AI product and technical leadership.',
     facts: [
-      ['Full name', 'Osmond Fan'],
-      ['Also known as', 'Celsia · Celsia Starflare'],
-      ['Organization', 'StandardCAS™ / PA Tech, SHSID'],
-      ['Active', 'Founder since 2019'],
-      ['Education', 'SHSID (Class of 2026); HKU, AI & Data Science (from 2026)'],
-      ['Fields', 'AI, machine learning, systems & infrastructure, data science'],
-      ['Known for', 'PA Tech & AI Central; Super Relay™; Synonance®; United AIGC Art Alliance'],
+      ['Full name', 'Celsia Fan · 樊汭琳'],
+      ['Contact', 'celsiastarflare@outlook.com'],
+      ['Organization', 'Shanghai High School International Division'],
+      ['Current role', 'Founder & Technical Lead, PA Tech'],
+      ['Class', 'SHSID · ’26'],
+      ['Fields', 'Artificial intelligence, programming, research, and technical leadership'],
     ],
     bio: [
-      'Celsia Fan (Osmond Fan) is a student technologist, AI and machine-learning researcher, and the Legacy Founder and active Head of the PA Tech Department at Shanghai High School International Division (SHSID).',
-      'She founded StandardCAS™ in 2019 and developed it into AI Central, a student-run AI-as-a-Service platform that serves the SHSID club ecosystem at near-zero cost to the school, and is the principal architect of its systems — including the Super Relay™ gateway and the Synonance® study platform. She is also a published researcher and the founder of the United AIGC Art Alliance, a community of more than 1,600 members.',
-    ],
-    sections: [
-      {
-        title: 'Background',
-        body: [
-          'Fan founded StandardCAS™ in 2019 as a coalition for sharing technical project resources and has led it continuously since. Early work spanned independent AI research and online community-building: in 2023 she authored CELSIA, a computer-vision-enhanced lightweight system for interface automation (ConfMLA 2023), and in 2024 CelsiaNet, a multimodal vision-language framework that achieved measurable gains over leading models at the St. Yau Research Competition. In parallel she founded the United AIGC Art Alliance, which grew into a community of over 1,600 members.',
-        ],
-      },
-      {
-        title: 'PA Tech & AI Central',
-        body: [
-          'As Head of PA Tech — SHSID’s student-run technical department — Fan leads the design, engineering, and operation of AI Central, the department’s flagship AI-as-a-Service platform for the campus club ecosystem: Fyona® (AI layout studio), Synonance® (a RAG study chatbot on Qwen-3.6 with a custom Super RAG + MCP pipeline at ~84% token reduction), The Spine (identity, telemetry, and routing across eight AI providers with privacy-first, aggregate-only reporting), Launchpad™ (isolated build-and-deploy for student code), and the student-facing directory, governance, competition-prep, and career specs.',
-          'The platform runs on a single server with self-healing agents, per-team database isolation, automated CI/CD, and a data-return mechanism for exiting teams. She also leads its governance — a three-party Memorandum of Understanding between PA Tech, Indexademics, and the PA Review Team — and the central club-coordination (社联会) role. She previously served as Lead Technology Developer for the SHSID Peer Advisor Department (2024–2025).',
-        ],
-      },
-      {
-        title: 'Research',
-        body: [
-          'Fan is the team leader and corresponding author of “Multidimensional Time Series Forecasting using State Space Models,” accepted to WCTRS 2026 in Toulouse, completed through the MIT | NISCI AI and Logistics program. Her earlier first-authored research — CelsiaNet (multimodal vision-language) and CELSIA (interface automation) — reported improvements over state-of-the-art baselines and earned the St. Yau Research Competition Bronze Medal. She has also held research-leadership roles at the University of Nanjing (lithium-sulfide battery development) and Alibaba Cloud (AI gaming-system frameworks), earning individual distinctions at both.',
-        ],
-      },
-      {
-        title: 'Community & outreach',
-        body: [
-          'Through the United AIGC Art Alliance, Fan has led a global creative-technical community of 1,600+ members, ranked #17 on the CIVITAI Background Legend Leaderboard with over 10M community views. She has directed resources back into the community — funding and mentoring content creators (one grown from 1,000 to 30,000 followers) and organizing crisis-response and donation initiatives.',
-        ],
-      },
-      {
-        title: 'Teaching & mentorship',
-        body: [
-          'Fan returned to the MIT | NISCI program as a teaching assistant after attending as a student, and taught programming and led a research team in Kathmandu, Nepal, through the Third Eye Foundation. Within SHSID she has mentored for the STEAM / AIML department and served as a long-term writer and interviewer for the Peer Advisor Department. She has also volunteered as an ESL teacher for rural China and Hebei students and in environmental programs.',
-        ],
-      },
+      'Celsia Fan founded and leads the Peer Advisor Technology Department, the technology arm of SHSID’s student-run outreach and support system. PA Tech builds the SaaS and AIaaS layer the program runs on.',
+      'Her work focuses on AI products, technical systems, team building, and cross-functional delivery across school programs and external organizations.',
     ],
     cv: [
-      { role: 'Legacy Founder', org: 'StandardCAS™', period: '2019 — present' },
-      { role: 'Head', org: 'PA Tech Department, SHSID', period: 'current' },
-      { role: 'Principal Architect', org: 'AI Central platform', period: 'current' },
-      { role: 'Club Coordination (社联会)', org: 'Campus club ecosystem', period: 'current' },
-      { role: 'Lead Technology Developer', org: 'SHSID Peer Advisor Department', period: '2024 — 2025' },
-      { role: 'Founder', org: 'United AIGC Art Alliance', period: '2023 — present' },
-      { role: 'Team Leader & Corresponding Author', org: 'WCTRS 2026', period: '2025' },
-      { role: 'Teaching Assistant', org: 'MIT | NISCI program', period: '2025' },
-      { role: 'AIML Mentor Assistant', org: 'SHSID STEAM Department', period: '2024 — 2025' },
-      { role: 'Coach Assistant', org: 'SHSID Stallions Laser Shooting (Rifle Section) Team', period: 'current' },
+      { role: 'Founder & Technical Lead', org: 'Peer Advisor Technology Department, SHSID', period: 'May 2026 — present', detail: 'Founded the department and leads technology, HR, administration, and planning. Built its team structure, intake process, and roadmap; shipped seven internal tools used by 30+ students and staff.' },
+      { role: 'Student Lead — Technical Specialist & Publications', org: 'SHSID Peer Advisor Program', period: 'Sep 2024 — May 2026', detail: 'Built AI transcription and flowchart tooling for interviews, video animation and subtitling tools, and publication layout systems.' },
+      { role: 'Student Assistant', org: 'Shanghai High School International Division', period: 'Nov 2024 — Jun 2025', detail: 'Supported computer-science research guidance, PA lectures and workshops, tutoring, and project startup guidance.' },
+      { role: 'Founder · Advisory role from May 2026', org: 'United AIGC Art Alliance', period: 'Mar 2023 — present', detail: 'Founded and grew an international AI-art community to 2,400 members and 10M+ aggregate views; published and maintained open image-model families and community licensing policy.' },
+      { role: 'AI Product Lead', org: 'Indexademics', period: 'Apr 2024 — present', detail: 'Built Arcana and architected Synonance, covering product design, document indexing, RAG retrieval, agentic workflows, deployment, reliability, and infrastructure.' },
+      { role: 'Quantitative Trading & Forecasting Intern', org: 'The Bank of East Asia', period: 'May 2026', detail: 'Led the project group and was named best intern. Built and compared systematic trading and forecasting approaches using Backtrader, ARIMA, XGBoost, LightGBM, GRU, and LSTM.' },
+      { role: 'Technical Team Lead', org: 'Lung Ming Green Energy Technology Engineering Co. Ltd.', period: 'Feb 2026 — May 2026', detail: 'Led a website and information-architecture rebuild and scoped agentic AI platforms for internal operations.' },
+      { role: 'Lead Technical Specialist', org: 'SHSID Sustainable Economics Club', period: 'Oct 2024 — May 2026' },
+      { role: 'Laser Shooting (Rifle) Assistant Coach', org: 'SHSID Stallions', period: 'Feb 2023 — Apr 2025' },
+      { role: 'Outreach Intern', org: 'Third Eye Foundation Nepal', period: 'Jul 2024 — Aug 2024' },
+      { role: 'Student Intern', org: 'Alibaba Cloud', period: 'Jan 2024', detail: 'Designed Fiona, an architecture for real-time AI-generated 3D games and environments, with adaptive generation and two-stage content safety.' },
+      { role: 'Lead Technical Specialist', org: 'SHSID ESL Outreach Group', period: 'Sep 2022 — Jun 2023' },
+      { role: 'Journalist', org: 'SHSID News Team', period: 'Oct 2020 — Jun 2022' },
     ],
-    recognition: [
-      'MIT | NISCI 2025 Outstanding Performance Award',
-      'SHSID 2025 Scholar Award in Computer Science',
-      'St. Yau 2024 — China 1st Prize & Global Bronze',
-      'NOAI 2024 — China 2nd Prize (Merit)',
-      'UKCC 2025 — Level D Perfect Score',
-      'Shanghai Provincial Laser Rifle — Individual #2 (2025)',
-    ],
-    focus: ['Artificial intelligence', 'Machine learning', 'Systems & infrastructure', 'Data science'],
+    focus: ['Artificial intelligence', 'Programming', 'Research', 'Product leadership', 'Community outreach'],
   },
   {
     id: 'gordon-huang', name: 'Gordon Huang', year: '28', avatar: 'GH',
     status: 'active',
-    title: 'Lead — Club Gateway · Co-lead — Club Alliances',
-    leads: [{ n: 6, role: 'Lead' }, { n: 0, role: 'Co-lead' }],
+    trafficRoles: ['core', 'dev', 'affiliations'],
+    title: 'Lead — SharedSpace · Co-lead — Club Alliances',
+    leads: [{ n: 5, role: 'Lead' }, { n: 4, role: 'Team' }, { n: 3, role: 'Team' }, { n: 1, role: 'Co-lead' }],
     insights:
-      'Owns the club layer — founding, affiliation, and governance — plus the teaching department on how to start a club.',
+      'An all-round developer and organizer working across web, media, design, infrastructure, logistics, and campus activities.',
+    headline: 'All-round development and management — connecting technical delivery with campus activities and operations.',
+    facts: [
+      ['Full name', 'Gordon Huang · 黄子谦'],
+      ['Class', 'SHSID · ’28'],
+      ['Fields', 'Web development, media, design, IT, networking, and operations'],
+    ],
+    bio: [
+      'Gordon Huang (Ziqian Huang) is an all-round developer and organizer who combines coding and web work with photography, video, graphics, IT, networking, and logistics.',
+      'Within PA Tech, he leads SharedSpace’s club layer — founding, affiliation, and governance — and helps run activities and the teaching work around starting a club.',
+    ],
+    focus: ['Web development', 'Management', 'Photography & video', 'Design', 'IT & networking', 'Event operations'],
   },
   {
     id: 'pete-chen', name: 'Pete Chen', year: '27', avatar: 'PC',
     status: 'active',
+    trafficRoles: ['core', 'dev', 'affiliations'],
     title: 'Lead — Synonance',
-    leads: [{ n: 2, role: 'Lead' }],
+    leads: [{ n: 3, role: 'Lead' }, { n: 4, role: 'Team' }],
     insights: 'Leads Synonance, the retrieval-grounded study assistant.',
   },
   {
     id: 'brian-deng', name: 'Brian Deng', year: '27', avatar: 'BD',
     status: 'active',
-    title: 'Lead — Database',
-    leads: [{ n: 7, role: 'Lead' }],
-    insights: 'Leads the shared data layer and the competition question bank.',
+    title: 'DataSci Outreach',
+    leads: [{ n: 7, role: 'Team' }, { n: 8, role: 'Lead' }],
+    insights: 'Builds the data-science outreach course and competition-learning resources.',
   },
   {
     id: 'rick-yu', name: 'Rick Yu', year: '29', avatar: 'RY',
     status: 'active',
-    title: 'Lead — Database',
-    leads: [{ n: 7, role: 'Lead' }],
-    insights: 'Leads the shared data layer and the competition question bank.',
+    title: 'Data Lead — Launchpad',
+    leads: [{ n: 4, role: 'Team' }, { n: 8, role: 'Lead' }],
+    insights: 'Leads Launchpad’s shared data layer and competition question bank.',
   },
   {
     id: 'jessica-qin', name: 'Jessica Qin', year: '30', avatar: 'JQ',
@@ -118,6 +101,111 @@ export const people = [
     title: 'Co-lead — Launchpad',
     leads: [{ n: 4, role: 'Co-lead' }],
     insights: 'Co-leads Launchpad, the build-and-deploy platform that lets clubs ship their own apps.',
+  },
+  {
+    id: 'christopher-jin', name: 'Christopher Jin', year: '29', avatar: 'CJ',
+    status: 'active',
+    title: 'Web & Operations',
+    leads: [],
+    insights: 'Works across web development, organizing, and logistics, with a strength in coordinating across students and teachers.',
+    headline: 'Web developer and organizer focused on the social and operational side of shipping campus projects.',
+    facts: [
+      ['Full name', 'Christopher Jin · 金睿清'],
+      ['Class', 'SHSID · ’29'],
+      ['Fields', 'Coding, web development, organizing, and logistics'],
+    ],
+    bio: [
+      'Christopher Jin is a web developer and organizer who contributes both technical work and the coordination needed to move projects through a school community.',
+      'He is particularly interested in the social side of delivery: communicating with different students and teachers, handling logistics, and helping teams turn ideas into workable activities.',
+    ],
+    focus: ['Web development', 'Student coordination', 'Teacher liaison', 'Logistics'],
+  },
+  {
+    id: 'will-chen', name: 'Will Chen', year: '28', avatar: 'WC',
+    status: 'active',
+    title: 'Systems, MLOps & Deep Learning',
+    leads: [],
+    insights: 'Builds and ships across systems, MLOps, backend, agentic software, deep-learning research, web, and Apple-platform applications.',
+    headline: 'Systems and MLOps engineer working across deep learning, agentic software, deployment, security, and UX.',
+    facts: [
+      ['Full name', 'William Chen · 陈衢浩'],
+      ['Class', 'SHSID · ’28'],
+      ['GitHub', 'github.com/willuhd'],
+      ['Fields', 'Systems, MLOps, backend, deep learning, agentic software, cybersecurity, and UX'],
+    ],
+    bio: [
+      'Will Chen is a systems and machine-learning builder who likes hacking on difficult technical problems and turning the results into shipped software. His work spans MLOps, backend systems, agentic applications, web and Apple-platform frontends, cybersecurity, and deep-learning research and deployment.',
+      'He also works in design, video, photography, and After Effects, bringing together infrastructure-level engineering and product-facing execution.',
+    ],
+    cv: [
+      { role: 'Round 2 Gold · National Top 50', org: 'USA AI Olympiad', period: '2026', detail: 'Advanced to the second round held at MIT.' },
+      { role: 'Top-accuracy solution', org: 'SHSID Hackathon', period: '2025', detail: 'Built scholarship-selection automation that was promoted for production use and evaluated real school scholarships.' },
+      { role: 'Camera-ready presentation', org: 'ISWC / UbiComp Teenager Show', period: '2026', detail: 'VeraSight combines classical and deep-learning models to detect behavioral anomalies from facial micro-movements captured by iPhone TrueDepth, optimized for edge inference.' },
+      { role: 'Round 2 qualifier', org: 'International AI Innovators Olympiad', period: '2026', detail: 'Qualified for the AI Innovators Challenge second round at MIT.' },
+      { role: 'Presentation & technical production', org: 'SHSID Class of 2026 Graduation Ceremony', period: '2026', detail: 'Produced the talented-students segment with After Effects and supported its backend and technical delivery.' },
+    ],
+    recognition: [
+      'USA AI Olympiad 2026 — Round 2 Gold, national top 50',
+      'SHSID Hackathon 2025 — top-accuracy solution selected for production use',
+      'ISWC / UbiComp 2026 Teenager Show — camera-ready presentation',
+      'International AI Innovators Olympiad 2026 — Round 2 qualifier',
+    ],
+    focus: ['MLOps', 'Systems', 'Backend', 'Agentic software', 'Deep learning', 'Cybersecurity', 'Web & Apple platforms', 'UX & motion design'],
+  },
+  {
+    id: 'jacen-wang', name: 'Jacen Wang', year: '26', avatar: 'JW',
+    status: 'historical', trafficRoles: ['historical', 'core'], title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'melody-hua', name: 'Melody Hua', year: '26', avatar: 'MH',
+    status: 'historical', trafficRoles: ['historical', 'core'], title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'frank-mao', name: 'Frank Mao', year: '26', avatar: 'FM',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'billy-jiang', name: 'Billy Jiang', year: '26', avatar: 'BJ',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'nick-wang', name: 'Nick Wang', year: '26', avatar: 'NW',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'cody-hsieh', name: 'Cody Hsieh', year: '26', avatar: 'CH',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'derek-shen', name: 'Derek Shen', year: '26', avatar: 'DS',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'kyle-gu', name: 'Kyle Gu', year: '26', avatar: 'KG',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'joseph-li', name: 'Joseph Li', year: '26', avatar: 'JL',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'nirvana-lu', name: 'Nirvana Lu', year: '26', avatar: 'NL',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
+  },
+  {
+    id: 'tony-wu', name: 'Tony Wu', year: '26', avatar: 'TW',
+    status: 'historical', title: 'Inherited from StandardCAS™ SHSID', leads: [],
+    insights: 'Historical team directory member inherited from StandardCAS™ SHSID.',
   },
 ];
 

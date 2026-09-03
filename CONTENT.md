@@ -44,7 +44,8 @@ leadership has a single source of truth.
 ```js
 {
   id: 'first-last', name: 'First Last', year: '27', avatar: 'FL',
-  status: 'active' | 'away',
+  status: 'active' | 'away' | 'historical',
+  trafficRoles: ['core' | 'dev' | 'affiliations' | 'historical'], // roles are additive
   title: 'Lead — Some Spec',                 // shown on the People page
   leads: 'all'                                // Leads every spec, OR…
        | [{ n: 2, role: 'Lead' }, { n: 4, role: 'Co-lead' }], // specs they lead, by number
@@ -53,6 +54,8 @@ leadership has a single source of truth.
 ```
 
 - The People page (`/team`) displays everyone as one team in array order.
+- Profile traffic-light roles are additive: Core is red, Dev is yellow, and Outreach (Affiliate) is green.
+- Historical directory profiles use blue without a text tag; historical Core profiles combine blue and red.
 - **`leads`** drives each spec page's Team section via `teamForSpec(n)`. `'all'` puts the
   person on every spec; an array assigns specific specs with a role.
 - **`status: 'away'`** shows an "Away" badge.
@@ -67,6 +70,7 @@ leadership has a single source of truth.
 - `contact.{ heading[2], blurb, primary, secondary, links[] }` — closing CTA. **Put your
   real email / GitHub / SharedSpace here.**
 - `footerNote` and `footerCredit` — the footer lines.
+- `sponsors[]` — names displayed in the scrolling sponsor bar above the footer.
 
 ## Stats are automatic
 

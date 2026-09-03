@@ -38,6 +38,8 @@ async function request(path, { method = 'GET', body } = {}) {
 }
 
 export const api = {
+  sendApplication: (body) => request('/contact/application', { method: 'POST', body }),
+
   register: (body) => request('/auth/register', { method: 'POST', body }),
   login: (body) => request('/auth/login', { method: 'POST', body }),
   logout: () => request('/auth/logout', { method: 'POST' }),

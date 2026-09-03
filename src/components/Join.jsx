@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { projects, specColors } from '../data/projects';
-import { site } from '../data/site';
 import SpecRing from './SpecRing';
+import { api } from '../lib/api';
 
-const teamEmail = site.contact.links.find((l) => l.label === 'Email')?.value || 'patech@standardcas.org';
 const slugify = (s) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const initials = (s) =>
   s.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '—';
@@ -47,6 +46,7 @@ export default function Join() {
   const [about, setAbout] = useState('');
   const [specs, setSpecs] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [submission, setSubmission] = useState({ state: 'idle', message: '' });
 
   const focusArr = focus.split(',').map((s) => s.trim()).filter(Boolean);
   const entry = buildEntry({ name, year, about, focusArr, specs });
@@ -64,22 +64,23 @@ export default function Join() {
     }
   };
 
-  const submit = () => {
-    const subject = `New member application — ${name}`;
-    const body = [
-      `Name: ${name}`,
-      `Class: ’${year}`,
-      `Email: ${email}`,
-      `Focus: ${focus || '—'}`,
-      `Interested specs: ${specs.map((n) => projects.find((p) => p.spec === n)?.title).join(', ') || '—'}`,
-      '',
-      'About:',
-      about || '—',
-      '',
-      '--- people.js entry ---',
-      entry,
-    ].join('\n');
-    window.location.assign(`mailto:${teamEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+  const submit = async () => {
+    if (!ready || submission.state === 'sending') return;
+    setSubmission({ state: 'sending', message: '' });
+    try {
+      await api.sendApplication({
+        name,
+        year,
+        email,
+        focus,
+        about,
+        specs: specs.map((n) => projects.find((p) => p.spec === n)?.title).filter(Boolean),
+        entry,
+      });
+      setSubmission({ state: 'sent', message: 'Application sent to patech@standardcas.org.' });
+    } catch (error) {
+      setSubmission({ state: 'error', message: error.message || 'Could not send the application.' });
+    }
   };
 
   return (
@@ -146,19 +147,22 @@ export default function Join() {
             <div className="pt-2 flex flex-wrap items-center gap-4">
               <button
                 onClick={submit}
-                disabled={!ready}
+                disabled={!ready || submission.state === 'sending' || submission.state === 'sent'}
                 className="kicker text-ink-950 bg-acid-500 px-6 py-3.5 hover:bg-acid-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Submit application →
+                {submission.state === 'sending' ? 'Sending…' : submission.state === 'sent' ? 'Application sent ✓' : 'Submit application →'}
               </button>
               <button onClick={copy} className="kicker text-ink-300 hover:text-ink-50 link-underline">
                 {copied ? 'Copied ✓' : 'Copy entry'}
               </button>
               {!ready && <span className="kicker text-ink-600">Name, year & email required</span>}
+              {submission.message && (
+                <span className={`kicker ${submission.state === 'error' ? 'text-red-500' : 'text-acid-500'}`}>{submission.message}</span>
+              )}
             </div>
 
             <p className="kicker text-ink-600 leading-relaxed normal-case tracking-normal max-w-xl">
-              Submitting opens a pre-filled email to the team with your details. Applications are reviewed and added to
+              Submitting securely emails your details to patech@standardcas.org. Applications are reviewed and added to
               the roster — once merged, your page goes live at /team/your-name.
             </p>
           </div>
