@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../lib/authContext';
-import { site } from '../data/site';
+import { site, projectCountWord } from '../data/site';
 
 const inputCls =
   'w-full bg-ink-950 border border-ink-700 px-3.5 py-2.5 text-ink-50 placeholder-ink-500 outline-none transition-colors focus:border-acid-500 focus:bg-ink-900';
@@ -10,7 +10,7 @@ const inputCls =
 const inside = [
   ['01', 'Calendar', 'Agenda + month view, every event tagged to a spec'],
   ['02', 'Timeline', 'The roadmap to the September handoff'],
-  ['03', 'Agents', 'Super Relay™, Synonance RAG & autonomous ops'],
+  ['03', 'Agents', 'Super Relay™, Academy RAG & autonomous ops'],
   ['04', 'Team', 'Who leads what across the project network'],
   ['05', 'Tasks & plans', 'The shared coordination ledger'],
 ];
@@ -104,7 +104,7 @@ export default function Access() {
               the studio.
             </h1>
             <p className="mt-6 max-w-xl text-ink-300 text-lg leading-relaxed">
-              Your private workspace inside {site.name} — where the eight projects of AI Central are coordinated,
+              Your private workspace inside {site.name} — where the {projectCountWord} projects of AI Central are coordinated,
               planned, and shipped. Calendar, timeline, agents, your team, and the tasks that move the work forward.
             </p>
 

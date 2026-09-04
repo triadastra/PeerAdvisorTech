@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { people } from '../data/people';
-import { projects } from '../data/projects';
+import { projects, liveLeads } from '../data/projects';
 import ProfileRing from './ProfileRing';
 import { rolesFor, TRAFFIC_ROLES } from '../data/trafficRoles';
 import Contact from './Contact';
@@ -37,7 +37,8 @@ export default function PersonPage() {
     );
   }
 
-  const specs = person.leads === 'all' ? 'all' : Array.isArray(person.leads) ? person.leads.map((l) => l.n) : [];
+  const leads = liveLeads(person);
+  const specs = person.leads === 'all' ? 'all' : leads.map((l) => l.n);
   const bio = person.bio?.length ? person.bio : [person.insights];
   const trafficRoles = rolesFor(person);
   const derived = person.status === 'historical' ? [] : [
@@ -98,7 +99,7 @@ export default function PersonPage() {
                   <p className="text-ink-200">Leads across the full project network.</p>
                 ) : specs.length ? (
                   <div className="flex flex-wrap gap-2">
-                    {person.leads.map((l) => {
+                    {leads.map((l) => {
                       const s = specByNumber[l.n];
                       return (
                         <button

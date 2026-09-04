@@ -1,26 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────
-//  PROJECTS — the public-facing roster (AI Central, Projects 01–08).
+//  PROJECTS — the public-facing roster (AI Central).
 //  Sanitized: internal details (pricing, ownership, infra cost, security
 //  status) live only in the handoff doc, never here.
 //  Team/leadership is NOT stored here — it derives from ./people.js
 //  (teamForSpec) so there is a single source of truth. See CONTENT.md.
+//
+//  Spec numbers are stable IDs, not positions: they stay attached to a
+//  project for life so people.js `leads` keep pointing at the right work.
+//  Gaps in the sequence are expected when a spec is retired.
 // ─────────────────────────────────────────────────────────────────────────
 
 export const projects = [
-  {
-    id: 'club-alliances',
-    spec: 1,
-    title: 'Club Alliances',
-    caption: 'Club-to-club alliances under mutual-benefit MOUs.',
-    category: 'Community',
-    status: 'Active',
-    bio: 'The outer alliance layer of AI Central. Recruited clubs join under mutual-benefit MOU trade agreements — low-dependency cooperation rather than commercial contracts. It is the club-to-club coordination layer that connects organizations across campus.',
-    techStack: ['MOU framework', 'Club coordination'],
-    workDescriptions: [
-      { title: 'Alliance model', description: 'Designed a mutual-benefit MOU structure that lets clubs cooperate without commercial lock-in.' },
-      { title: 'Coordination layer', description: 'A club-level network — the connective tissue between organizations, distinct from the person-level directory.' },
-    ],
-  },
   {
     id: 'fyona',
     spec: 2,
@@ -46,7 +36,7 @@ export const projects = [
   {
     id: 'synonance',
     spec: 3,
-    title: 'Synonance',
+    title: 'Academy',
     caption: 'A RAG study chatbot grounded in real curriculum.',
     category: 'AI / ML',
     tier: 'Core',
@@ -124,38 +114,38 @@ export const projects = [
       { title: 'Career exploration', description: 'Guides students from coursework toward concrete career paths and next steps.' },
     ],
   },
+  // ── PLACEHOLDER ─────────────────────────────────────────────────────────
+  // Study and Session are stubs: title and spec number are real, the rest is
+  // scaffolding to fill in. Category and status below are guesses — set them
+  // before this goes public. See CONTENT.md.
   {
-    id: 'datasci-outreach',
-    spec: 7,
-    title: 'DataSci Outreach',
-    caption: 'A hands-on data-science outreach course.',
+    id: 'study',
+    spec: 9,
+    title: 'Study',
+    caption: 'TODO — one line on what Study does.',
     category: 'Education',
     status: 'Planned',
-    bio: 'A data-science teaching and outreach course that brings practical skills to more students. It deploys on Launchpad, so it follows once that platform opens.',
-    techStack: ['Data science', 'Curriculum'],
-    workDescriptions: [
-      { title: 'Outreach curriculum', description: 'A hands-on course built to teach data science and widen access to it.' },
-    ],
+    bio: 'TODO — a short paragraph on what Study is, who it is for, and why it exists.',
+    techStack: [],
+    workDescriptions: [],
   },
   {
-    id: 'competition-lists',
-    spec: 8,
-    title: 'Competition Lists',
-    caption: 'Curated competition lists and prep.',
+    id: 'session',
+    spec: 10,
+    title: 'Session',
+    caption: 'TODO — one line on what Session does.',
     category: 'Education',
-    status: 'In development',
-    teamOrder: ['Brian Deng', 'Rick Yu'],
-    bio: 'The competition-facing surface of the studio: curated lists and preparation for the contests the question bank feeds. What students actually browse and use to get ready.',
-    techStack: ['Curation', 'Prep'],
-    workDescriptions: [
-      { title: 'Curated lists', description: 'Hand-curated competition lists that point students to the right contests.' },
-      { title: 'Prep surface', description: 'The student-facing front end for preparation, backed by the shared question bank.' },
-    ],
+    status: 'Planned',
+    bio: 'TODO — a short paragraph on what Session is, who it is for, and why it exists.',
+    techStack: [],
+    workDescriptions: [],
   },
 ];
 
 // Per-spec colors — used by the chromatic SpecRing on team pages.
-// Ordered as a spectrum, so all 11 lit together read as a rainbow.
+// Keyed by spec number (stable across retirements), ordered as a spectrum so
+// the live specs read as a gradient when lit together. Retired spec numbers
+// keep their color in case the spec returns.
 export const specColors = {
   1: '#ff5a5f',
   2: '#ff8c42',
@@ -165,4 +155,12 @@ export const specColors = {
   6: '#38bdf8',
   7: '#a855f7',
   8: '#fb7185',
+  9: '#e879f9',
+  10: '#c8f135',
 };
+
+// Leads pointing at a retired spec are dropped, so the UI never renders a
+// dangling reference when a project leaves the roster above.
+const LIVE_SPECS = new Set(projects.map((p) => p.spec));
+export const liveLeads = (person) =>
+  Array.isArray(person.leads) ? person.leads.filter((l) => LIVE_SPECS.has(l.n)) : [];

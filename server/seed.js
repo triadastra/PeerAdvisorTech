@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────
 //  SEED — the groups/tasks members can apply to, and the timeline nodes
-//  (steps) inside each. Mirrors the eight AI Central projects so the
+//  (steps) inside each. Mirrors the AI Central project tracks so the
 //  workspace timeline reflects the real work. Nodes are the claimable steps:
 //  a member picks one, hits "Work on it", and a 24h recruiting window opens.
 //  Kept server-side and self-contained (no import from the front-end bundle).
@@ -19,7 +19,7 @@ export const trackSeed = [
     ],
   },
   {
-    id: 'synonance', spec: 3, title: 'Synonance', category: 'AI / ML', status: 'Production',
+    id: 'synonance', spec: 3, title: 'Academy', category: 'AI / ML', status: 'Production',
     blurb: 'RAG study chatbot grounded in real curriculum.',
     nodes: [
       { key: 'super-rag', title: 'Super RAG pipeline', detail: 'Retrieval + MCP pipeline, ~84% fewer tokens.' },
@@ -52,12 +52,23 @@ export const trackSeed = [
       { key: 'exploration', title: 'Career exploration', detail: 'Map coursework to concrete career paths.' },
     ],
   },
+  // ── PLACEHOLDER ─────────────────────────────────────────────────────────
+  // Study and Session mirror the stubs in src/data/projects.js. The single step
+  // on each is scaffolding, not real work — replace it with the actual
+  // claimable steps before pointing members at these tracks, because claiming a
+  // node opens a 24h recruiting window and provisions a git repo for it.
   {
-    id: 'competition-lists', spec: 8, title: 'Competition Lists', category: 'Education', status: 'In development',
-    blurb: 'Curated competition lists and prep.',
+    id: 'study', spec: 9, title: 'Study', category: 'Education', status: 'Planned',
+    blurb: 'TODO — one line on what Study does.',
     nodes: [
-      { key: 'curated', title: 'Curated lists', detail: 'Hand-curated lists pointing to the right contests.' },
-      { key: 'prep', title: 'Prep surface', detail: 'Student-facing prep backed by the question bank.' },
+      { key: 'todo', title: 'TODO — first step', detail: 'Replace with the first claimable step on this track.' },
+    ],
+  },
+  {
+    id: 'session', spec: 10, title: 'Session', category: 'Education', status: 'Planned',
+    blurb: 'TODO — one line on what Session does.',
+    nodes: [
+      { key: 'todo', title: 'TODO — first step', detail: 'Replace with the first claimable step on this track.' },
     ],
   },
 ];
@@ -66,6 +77,7 @@ export const trackSeed = [
 export const specColors = {
   1: '#ff5a5f', 2: '#ff8c42', 3: '#ffc145', 4: '#4ade80',
   5: '#2dd4bf', 6: '#38bdf8', 7: '#a855f7', 8: '#fb7185',
+  9: '#e879f9', 10: '#c8f135',
 };
 
 // Flattened, client-ready track list with node ids + colors.
