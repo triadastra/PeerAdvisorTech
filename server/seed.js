@@ -52,12 +52,32 @@ export const trackSeed = [
       { key: 'exploration', title: 'Career exploration', detail: 'Map coursework to concrete career paths.' },
     ],
   },
+  // ── PLACEHOLDER ─────────────────────────────────────────────────────────
+  // Study and Session mirror the stubs in src/data/projects.js. The single step
+  // on each is scaffolding, not real work — replace it with the actual
+  // claimable steps before pointing members at these tracks, because claiming a
+  // node opens a 24h recruiting window and provisions a git repo for it.
+  {
+    id: 'study', spec: 9, title: 'Study', category: 'Education', status: 'Planned',
+    blurb: 'TODO — one line on what Study does.',
+    nodes: [
+      { key: 'todo', title: 'TODO — first step', detail: 'Replace with the first claimable step on this track.' },
+    ],
+  },
+  {
+    id: 'session', spec: 10, title: 'Session', category: 'Education', status: 'Planned',
+    blurb: 'TODO — one line on what Session does.',
+    nodes: [
+      { key: 'todo', title: 'TODO — first step', detail: 'Replace with the first claimable step on this track.' },
+    ],
+  },
 ];
 
 // Per-spec colors — mirrors src/data/projects.js so the timeline stays in sync.
 export const specColors = {
   1: '#ff5a5f', 2: '#ff8c42', 3: '#ffc145', 4: '#4ade80',
   5: '#2dd4bf', 6: '#38bdf8', 7: '#a855f7', 8: '#fb7185',
+  9: '#e879f9', 10: '#c8f135',
 };
 
 // Flattened, client-ready track list with node ids + colors.
