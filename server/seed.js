@@ -52,14 +52,6 @@ export const trackSeed = [
       { key: 'exploration', title: 'Career exploration', detail: 'Map coursework to concrete career paths.' },
     ],
   },
-  {
-    id: 'competition-lists', spec: 8, title: 'Competition Lists', category: 'Education', status: 'In development',
-    blurb: 'Curated competition lists and prep.',
-    nodes: [
-      { key: 'curated', title: 'Curated lists', detail: 'Hand-curated lists pointing to the right contests.' },
-      { key: 'prep', title: 'Prep surface', detail: 'Student-facing prep backed by the question bank.' },
-    ],
-  },
 ];
 
 // Per-spec colors — mirrors src/data/projects.js so the timeline stays in sync.
