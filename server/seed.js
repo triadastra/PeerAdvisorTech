@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────
 //  SEED — the groups/tasks members can apply to, and the timeline nodes
-//  (steps) inside each. Mirrors the eight AI Central projects so the
+//  (steps) inside each. Mirrors the AI Central project tracks so the
 //  workspace timeline reflects the real work. Nodes are the claimable steps:
 //  a member picks one, hits "Work on it", and a 24h recruiting window opens.
 //  Kept server-side and self-contained (no import from the front-end bundle).
@@ -19,7 +19,7 @@ export const trackSeed = [
     ],
   },
   {
-    id: 'synonance', spec: 3, title: 'Synonance', category: 'AI / ML', status: 'Production',
+    id: 'synonance', spec: 3, title: 'Academy', category: 'AI / ML', status: 'Production',
     blurb: 'RAG study chatbot grounded in real curriculum.',
     nodes: [
       { key: 'super-rag', title: 'Super RAG pipeline', detail: 'Retrieval + MCP pipeline, ~84% fewer tokens.' },

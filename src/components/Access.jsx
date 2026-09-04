@@ -10,7 +10,7 @@ const inputCls =
 const inside = [
   ['01', 'Calendar', 'Agenda + month view, every event tagged to a spec'],
   ['02', 'Timeline', 'The roadmap to the September handoff'],
-  ['03', 'Agents', 'Super Relay™, Synonance RAG & autonomous ops'],
+  ['03', 'Agents', 'Super Relay™, Academy RAG & autonomous ops'],
   ['04', 'Team', 'Who leads what across the project network'],
   ['05', 'Tasks & plans', 'The shared coordination ledger'],
 ];

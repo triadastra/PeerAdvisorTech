@@ -14,7 +14,7 @@ export const HANDOFF_DATE = '2026-09-01';
 // that owns each one.
 export const agents = [
   { id: 'super-relay', name: 'Super Relay™', spec: 4, scope: 'Launchpad routing · 8 providers', status: 'live', metric: '99.9%' },
-  { id: 'synonance-rag', name: 'Synonance RAG', spec: 3, scope: 'Retrieval pipeline', status: 'live', metric: '84%↓ tokens' },
+  { id: 'synonance-rag', name: 'Academy RAG', spec: 3, scope: 'Retrieval pipeline', status: 'live', metric: '84%↓ tokens' },
   { id: 'self-healing', name: 'Self-healing ops', spec: 4, scope: 'Infra watchdog', status: 'idle', metric: 'last 02:14' },
   { id: 'intelligence', name: 'Intelligence layer', spec: 4, scope: 'Aggregate reporting', status: 'live', metric: 'min-N floor' },
   { id: 'launchpad-runner', name: 'Launchpad runner', spec: 4, scope: 'Build & deploy executor', status: 'standby', metric: 'pre-launch' },
@@ -38,7 +38,7 @@ export const priorityColor = { High: '#fb7185', Med: '#ffc145', Low: '#605e58' }
 export const starterTasks = [
   { title: 'Harden Launchpad routing and identity', spec: 4, priority: 'High' },
   { title: 'Resource isolation for untrusted student code', spec: 4, priority: 'High' },
-  { title: 'Refresh Synonance curriculum index', spec: 3, priority: 'Med' },
+  { title: 'Refresh Academy curriculum index', spec: 3, priority: 'Med' },
   { title: 'Lock the master roster for the successor', spec: null, priority: 'Med' },
   { title: 'Reconcile spec count in bio (8 vs 11)', spec: null, priority: 'Low' },
 ];
@@ -47,7 +47,7 @@ export const starterTasks = [
 export const starterEvents = [
   { dayOffset: 0, time: '09:30', title: 'Launchpad spine hardening review', spec: 4, with_whom: null },
   { dayOffset: 0, time: '14:00', title: 'Launchpad isolation sync', spec: 4, with_whom: 'Jessica' },
-  { dayOffset: 1, time: '10:00', title: 'Synonance RAG eval', spec: 3, with_whom: 'Pete' },
+  { dayOffset: 1, time: '10:00', title: 'Academy RAG eval', spec: 3, with_whom: 'Pete' },
   { dayOffset: 3, time: '16:00', title: 'Roster handoff checkpoint', spec: null, with_whom: null },
 ];
 
