@@ -36,5 +36,5 @@ server/.data
 *.zip
 *.docx
 super_relay_contour_map*.html
-.venv/
+.venv
 __pycache__/
