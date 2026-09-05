@@ -1,7 +1,12 @@
 import { motion } from 'framer-motion';
 import { roleGradient, rolesFor, TRAFFIC_ROLES } from '../data/trafficRoles';
 
-export default function ProfileRing({ person, spin = true, shape = 'ring', showAvatar = true, className = '' }) {
+export default function ProfileRing({ person, neutral = false, spin = true, shape = 'ring', showAvatar = true, className = '' }) {
+  if (neutral) return (
+    <div className={`flex items-center justify-center border border-ink-700 bg-ink-900 text-ink-200 ${shape === 'ring' ? 'rounded-full' : ''} ${className}`} aria-hidden="true">
+      {showAvatar && <span className={shape === 'ring' ? 'font-display text-3xl font-semibold' : 'font-mono text-xs'}>{person.avatar}</span>}
+    </div>
+  );
   const roles = rolesFor(person);
   const round = shape === 'ring';
 

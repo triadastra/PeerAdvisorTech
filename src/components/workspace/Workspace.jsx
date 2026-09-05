@@ -4,16 +4,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../lib/authContext';
 import { vidFor, listTracks, listAssignments, listForum, createAssignment } from '../../lib/db';
 import { initials } from './util';
+import Contributions from './Contributions';
+import Studio from './Studio';
+import './studio.css';
 import MyTimeline from './MyTimeline';
 import Groups from './Groups';
 import Forum from './Forum';
 import WorkOnItModal from './WorkOnItModal';
 
-const TABS = ['Timeline', 'Groups & Tasks', 'Forum'];
+const TABS = ['Studio', 'Timeline', 'Groups & Tasks', 'Contributions', 'Forum'];
 
 export default function Workspace() {
   const { user, profile, signOut } = useAuth();
-  const [tab, setTab] = useState('Timeline');
+  const [tab, setTab] = useState('Studio');
   const [tracks, setTracks] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [forum, setForum] = useState([]);
@@ -82,16 +85,16 @@ export default function Workspace() {
     setForum,
   };
 
-  const Section = { Timeline: MyTimeline, 'Groups & Tasks': Groups, Forum }[tab];
+  const Section = { Studio, Contributions, Timeline: MyTimeline, 'Groups & Tasks': Groups, Forum }[tab];
 
   return (
-    <div className="min-h-screen">
+    <div className="student-workspace min-h-screen">
       {/* ── Top bar ── */}
       <div className="sticky top-0 z-40 bg-ink-950/90 backdrop-blur-md border-b border-ink-800">
         <div className="mx-auto max-w-[1100px] px-4 md:px-6 h-[60px] flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
             <span className="inline-block w-2 h-2 bg-acid-500" />
-            <span className="font-mono text-sm font-semibold text-ink-50">PATD<span className="text-ink-500 font-normal">/workspace</span></span>
+            <span className="font-mono text-sm font-semibold text-ink-50">PATD<span className="text-ink-500 font-normal">/studio</span></span>
           </Link>
           <div className="flex items-center gap-2.5">
             <span className="font-mono text-[10px] w-8 h-8 border border-acid-500/30 flex items-center justify-center text-acid-500 shrink-0">{initials(name)}</span>
@@ -118,7 +121,7 @@ export default function Workspace() {
                   tab === t ? 'text-ink-50 border-acid-500' : 'text-ink-500 border-transparent hover:text-ink-200'
                 }`}
               >
-                {t}
+                {{ Studio: 'Home base', Timeline: 'My builds', 'Groups & Tasks': 'Explore projects', Contributions: 'Contributions', Forum: 'Common room' }[t]}
               </button>
             ))}
           </div>
@@ -146,7 +149,7 @@ export default function Workspace() {
             assignments={assignments}
             onConfirm={confirmWorkOn}
             onClose={() => { setModal(null); if (modal.phase === 'done') go('Timeline'); }}
-            onInvite={() => go('Forum')}
+            onInvite={() => { setModal(null); go('Forum'); }}
           />
         )}
       </AnimatePresence>

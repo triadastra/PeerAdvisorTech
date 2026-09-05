@@ -38,7 +38,6 @@ async function request(path, { method = 'GET', body } = {}) {
 }
 
 export const api = {
-  sendApplication: (body) => request('/contact/application', { method: 'POST', body }),
 
   register: (body) => request('/auth/register', { method: 'POST', body }),
   login: (body) => request('/auth/login', { method: 'POST', body }),
@@ -62,6 +61,11 @@ export const api = {
   createAssignment: (body) => request('/assignments', { method: 'POST', body }),
   joinAssignment: (id) => request(`/assignments/${id}/join`, { method: 'POST' }),
   leaveAssignment: (id) => request(`/assignments/${id}`, { method: 'DELETE' }),
+
+  submissionState: (id) => request(`/assignments/${id}/submission`),
+  reviewSubmission: (id, body) => request(`/assignments/${id}/review`, { method: 'POST', body }),
+  contributions: () => request('/contributions'),
+  submitContribution: (body) => request('/contributions', { method: 'POST', body }),
 
   forum: () => request('/forum'),
   createPost: (body) => request('/forum', { method: 'POST', body }),

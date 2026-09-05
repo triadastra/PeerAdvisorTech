@@ -1,9 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { people } from '../data/people';
-import { projects } from '../data/projects';
+import { projects, liveLeads } from '../data/projects';
 import ProfileRing from './ProfileRing';
-import { rolesFor, TRAFFIC_ROLES } from '../data/trafficRoles';
 import Contact from './Contact';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -37,9 +36,9 @@ export default function PersonPage() {
     );
   }
 
-  const specs = person.leads === 'all' ? 'all' : Array.isArray(person.leads) ? person.leads.map((l) => l.n) : [];
+  const leads = liveLeads(person);
+  const specs = person.leads === 'all' ? 'all' : leads.map((l) => l.n);
   const bio = person.bio?.length ? person.bio : [person.insights];
-  const trafficRoles = rolesFor(person);
   const derived = person.status === 'historical' ? [] : [
     ['Status', person.status === 'away' ? 'Away' : 'Active'],
   ];
@@ -98,7 +97,7 @@ export default function PersonPage() {
                   <p className="text-ink-200">Leads across the full project network.</p>
                 ) : specs.length ? (
                   <div className="flex flex-wrap gap-2">
-                    {person.leads.map((l) => {
+                    {leads.map((l) => {
                       const s = specByNumber[l.n];
                       return (
                         <button
@@ -144,13 +143,9 @@ export default function PersonPage() {
 
             <aside>
               <div className="lg:sticky lg:top-24 border border-ink-800 p-6">
-                <ProfileRing person={person} className="w-32 h-32 mx-auto" />
+                <ProfileRing neutral person={person} className="w-32 h-32 mx-auto" />
                 <div className="text-center mt-4 font-display text-xl text-ink-50">{person.name}</div>
-                <div className="flex flex-wrap justify-center gap-2 mt-2 mb-5">
-                  {trafficRoles.filter((role) => TRAFFIC_ROLES[role].label).map((role) => (
-                    <span key={role} className="kicker" style={{ color: TRAFFIC_ROLES[role].color }}>{TRAFFIC_ROLES[role].label}</span>
-                  ))}
-                </div>
+                <div className="kicker text-ink-400 text-center mt-2 mb-5">{person.status === 'historical' ? 'Historical Team' : 'Current Team'}</div>
                 <dl>
                   {infobox.map(([k, v]) => (
                     <div key={k} className="border-t border-ink-800 py-3">

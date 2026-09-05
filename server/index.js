@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import crypto from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -14,7 +15,9 @@ import { fileURLToPath } from 'node:url';
 import { data, save } from './store.js';
 import { hashPassword, verifyPassword, signToken, verifyToken, vidFor } from './auth.js';
 import { buildTracks } from './seed.js';
-import { ensureRepo, repoSlug, cloneUrl, gitHttpBackend, gitAvailable } from './git.js';
+import { ensureRepo, repoSlug, cloneUrl, gitHttpBackend, gitAvailable, authorizeGit, repoHead, REPOS_DIR } from './git.js';
+
+import { analyze, repoLocks, scoreVersion, schoolDay, creditPlan, studentRanges } from './scoring.js';
 
 // Static group/task tracks + a nodeId → { track, node } lookup.
 const TRACKS = buildTracks();
@@ -22,7 +25,8 @@ const NODE_INDEX = new Map();
 for (const t of TRACKS) for (const n of t.nodes) NODE_INDEX.set(n.id, { track: t, node: n });
 
 const RECRUIT_MS = 24 * 60 * 60 * 1000; // 24h recruiting window
-const loginOf = (u) => (u?.email ? u.email.split('@')[0] : (u?.name || 'member').toLowerCase().replace(/[^a-z0-9]+/g, '')) || 'member';
+const loginOf = (u) => u?.email || legacyLoginOf(u);
+const legacyLoginOf = (u) => (u?.email ? u.email.split('@')[0] : (u?.name || 'member').toLowerCase().replace(/[^a-z0-9]+/g, '')) || 'member';
 const nameOf = (id) => data.users.find((u) => u.id === id)?.name || 'Member';
 const effectiveStatus = (a) => (a.status === 'done' ? 'done' : (Date.now() > a.recruiting_ends_at ? 'active' : 'recruiting'));
 
@@ -80,16 +84,9 @@ function requireAuth(req, res, next) {
 
 const isEmail = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
 
-const applicationAttempts = new Map();
-function applicationRateLimit(req, res, next) {
-  const key = req.ip || req.socket.remoteAddress || 'unknown';
-  const now = Date.now();
-  const recent = (applicationAttempts.get(key) || []).filter((time) => now - time < 60_000);
-  if (recent.length >= 5) return res.status(429).json({ error: 'Too many submissions. Please wait a minute and try again.' });
-  recent.push(now);
-  applicationAttempts.set(key, recent);
-  next();
-}
+const applicationRateLimit = rateLimit({ windowMs: 60_000, limit: 5, message: { error: 'Too many submissions. Please wait a minute and try again.' } });
+const assignmentRateLimit = rateLimit({ windowMs: 60_000, limit: 30, message: { error: 'Too many assignment requests. Please wait a minute and try again.' } });
+const gitRateLimit = rateLimit({ windowMs: 60_000, limit: 120, message: { error: 'Too many git requests. Please wait a minute and try again.' } });
 
 // ── Public member applications ───────────────────────────────────────────────
 app.post('/api/contact/application', applicationRateLimit, async (req, res) => {
@@ -107,7 +104,7 @@ app.post('/api/contact/application', applicationRateLimit, async (req, res) => {
 
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
-  const to = process.env.RESEND_TO_EMAIL || 'patech@standardcas.org';
+  const to = process.env.RESEND_TO_EMAIL || 'patech.shsid@outlook.com';
   if (!apiKey || !from) return res.status(503).json({ error: 'Email delivery is not configured yet.' });
 
   const text = [
@@ -299,6 +296,7 @@ function publicAssignment(a, req) {
     recruiting_ends_at: a.recruiting_ends_at,
     created_at: a.created_at,
     repo: a.repo,
+    scoring_base: a.scoring_base,
     // The clone URL carries the *requesting* member's login as the username.
     clone_url: a.repo ? cloneUrl(req, a.repo, loginOf(req.user)) : null,
   };
@@ -313,7 +311,7 @@ app.get('/api/assignments', requireAuth, (req, res) => {
 
 // Work on it — claim a node. Idempotent per (user, node): returns the existing
 // claim if the user already joined it.
-app.post('/api/assignments', requireAuth, (req, res) => {
+app.post('/api/assignments', requireAuth, assignmentRateLimit, (req, res) => {
   const nodeId = String(req.body?.node_id || '');
   const idx = NODE_INDEX.get(nodeId);
   if (!idx) return res.status(400).json({ error: 'Unknown node.' });
@@ -346,6 +344,7 @@ app.post('/api/assignments', requireAuth, (req, res) => {
     status: 'recruiting',
     recruiting_ends_at: Date.now() + RECRUIT_MS,
     repo,
+    scoring_base: repo ? repoHead(repo) : null,
     created_at: new Date().toISOString(),
   };
   data.assignments.push(assignment);
@@ -367,10 +366,117 @@ app.delete('/api/assignments/:id', requireAuth, (req, res) => {
   const i = data.assignments.findIndex((x) => x.id === req.params.id);
   if (i === -1) return res.status(404).json({ error: 'Not found.' });
   const a = data.assignments[i];
+  if (a.status === 'done' || repoLocks.has(a.repo) || data.pushes.some(p => p.repo === a.repo)) return res.status(409).json({ error: 'Tasks with recorded pushes or submissions cannot be deleted.' });
   if (a.owner_id === req.user.id) data.assignments.splice(i, 1);
   else a.member_ids = a.member_ids.filter((m) => m !== req.user.id);
   save();
   res.status(204).end();
+});
+
+// Pin existing repositories at their current main before accepting new scored work.
+// Historical unauthenticated pushes are never assigned to a student retroactively.
+let migratedBases = false;
+for (const a of data.assignments) {
+  if (a.repo && !a.scoring_base) { a.scoring_base = repoHead(a.repo); migratedBases = true; }
+}
+if (migratedBases) save();
+
+const reviewers = () => (process.env.REVIEWER_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
+const canReview = (u) => reviewers().includes(u.id);
+const publicContribution = (c) => ({ ...c, author: nameOf(c.user_id), status: c.status === 'pending' && c.day !== schoolDay() ? 'expired' : c.status });
+app.get('/api/contributions', requireAuth, (req, res) => {
+  const year = schoolDay().slice(0, 4);
+  const feed = [...data.contributions].reverse().map(c => c.version === scoreVersion ? publicContribution(c) : { ...c, author: nameOf(c.user_id), hours: 0, status: 'legacy' });
+  const scores = data.users.map(u => {
+    const records = data.contributions.filter(c => c.version === scoreVersion && c.user_id === u.id && c.year === year);
+    return { user_id: u.id, name: u.name, score: records.reduce((sum, c) => sum + c.hours, 0), submissions: records.length };
+  }).sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const demo_feed = data.demo_contributions;
+  const demo_scores = [...new Set(demo_feed.map(c => c.user_id))].map(id => {
+    const entries = demo_feed.filter(c => c.user_id === id);
+    return { user_id: id, name: entries[0].author, score: entries.reduce((s, c) => s + c.hours, 0), submissions: entries.length };
+  }).sort((a, b) => b.score - a.score);
+  res.json({ feed, scores, demo_feed, demo_scores, year, can_review: canReview(req.user), ci_configured: Boolean(process.env.CI_REPORT_TOKEN), version: scoreVersion });
+});
+
+// Only a trusted runner can report CI; students cannot set T in a finish request.
+app.post('/api/ci-results', (req, res) => {
+  const token = process.env.CI_REPORT_TOKEN;
+  const supplied = req.headers.authorization || '';
+  const expected = `Bearer ${token}`;
+  if (!token || supplied.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(expected))) return res.status(403).json({ error: 'Trusted CI credentials required.' });
+  const { repo, head, passed } = req.body || {};
+  if (typeof passed !== 'boolean' || !/^[a-f0-9]{40,64}$/.test(head || '') || !data.assignments.some(a => a.repo === repo) || repoHead(repo) !== head) return res.status(400).json({ error: 'Report a boolean result for the exact current main commit.' });
+  const result = { repo, head, passed, created_at: new Date().toISOString() };
+  data.ci_results.push(result);
+  try { save(); } catch { data.ci_results.pop(); return res.status(500).json({ error: 'Could not save CI evidence.' }); }
+  res.status(201).json(result);
+});
+
+// Optional rating is set by an explicitly configured reviewer BEFORE finishing.
+app.post('/api/assignments/:id/review', requireAuth, (req, res) => {
+  if (!canReview(req.user)) return res.status(403).json({ error: 'Reviewer access required.' });
+  const a = data.assignments.find(a => a.id === req.params.id);
+  const { head, rating } = req.body || {};
+  if (!a || a.status === 'done' || ![0, 1, 2].includes(rating) || !head || repoHead(a.repo) !== head) return res.status(400).json({ error: 'Rate the current main commit of an unfinished task.' });
+  if (data.pushes.some(p => p.repo === a.repo && p.user_id === req.user.id)) return res.status(403).json({ error: 'A contributor cannot rate their own task.' });
+  const review = { assignment_id: a.id, head, rating, reviewer_id: req.user.id, created_at: new Date().toISOString() };
+  data.reviews.push(review);
+  try { save(); } catch { data.reviews.pop(); return res.status(500).json({ error: 'Could not save review.' }); }
+  res.status(201).json(review);
+});
+
+app.get('/api/assignments/:id/submission', requireAuth, (req, res) => {
+  const a = data.assignments.find(a => a.id === req.params.id);
+  if (!a || (!a.member_ids.includes(req.user.id) && !canReview(req.user))) return res.status(403).json({ error: 'Task membership required.' });
+  const head = a.repo ? repoHead(a.repo) : null;
+  const push = data.pushes.findLast(p => p.repo === a.repo && p.head === head);
+  const ci = data.ci_results.findLast(c => c.repo === a.repo && c.head === head);
+  const review = data.reviews.findLast(r => r.assignment_id === a.id && r.head === head);
+  res.json({ base: a.scoring_base, head, pushed_by: push ? nameOf(push.user_id) : null, can_finish: head !== a.scoring_base && data.pushes.some(p => p.repo === a.repo && p.user_id === req.user.id) && !data.contributions.some(c => c.version === scoreVersion && c.assignment_id === a.id && c.user_id === req.user.id),
+    ci: ci ? (ci.passed ? 'passed' : 'failed') : 'not reported', rating: review?.rating ?? 0, status: a.status });
+});
+
+app.post('/api/contributions', requireAuth, assignmentRateLimit, async (req, res) => {
+  const assignment = data.assignments.find(a => a.id === req.body?.assignment_id);
+  if (!assignment || !assignment.member_ids.includes(req.user.id)) return res.status(403).json({ error: 'Join this project step before finishing it.' });
+  if (data.contributions.some(c => c.version === scoreVersion && c.assignment_id === assignment.id && c.user_id === req.user.id)) return res.status(409).json({ error: 'You have already finished and recorded your part of this task.' });
+  const title = `Finished: ${assignment.node_title || assignment.node_id}`;
+  if (!assignment.repo || !assignment.scoring_base) return res.status(409).json({ error: 'This repository has no scoring baseline. Contact the administrator.' });
+  if (repoLocks.has(assignment.repo)) return res.status(409).json({ error: 'Repository busy. Retry after the push or submission finishes.' });
+  const head = repoHead(assignment.repo);
+  const receipt = data.pushes.findLast(p => p.repo === assignment.repo && p.head === head);
+  if (!head || head === assignment.scoring_base || !data.pushes.some(p => p.repo === assignment.repo && p.user_id === req.user.id)) return res.status(409).json({ error: 'Push your changes to main using your workspace credentials before finishing the task.' });
+  if (data.contributions.some(c => c.version === scoreVersion && c.repo === assignment.repo && c.head === head && c.user_id === req.user.id)) return res.status(409).json({ error: 'This commit has already been submitted.' });
+  repoLocks.add(assignment.repo);
+  try {
+    const ranges = studentRanges(data.pushes, assignment.repo, assignment.scoring_base, head, req.user.id);
+    if (!ranges.length) throw new Error('No authenticated pushes from your account were found for this task.');
+    const parts = [];
+    for (const range of ranges) parts.push(await analyze(join(REPOS_DIR, `${assignment.repo}.git`), range.base, range.head));
+    const metrics = { added: parts.reduce((s, p) => s + p.added, 0), deleted: parts.reduce((s, p) => s + p.deleted, 0), C: parts.reduce((s, p) => s + p.C, 0),
+      source_files: [...new Set(parts.flatMap(p => p.source_files))], test_files: [...new Set(parts.flatMap(p => p.test_files))], R: 0, T: 0 };
+    metrics.L = Math.max(metrics.added, metrics.deleted); metrics.S = Math.min(15, metrics.source_files.length);
+    const ci = data.ci_results.findLast(c => c.repo === assignment.repo && c.head === head);
+    metrics.T = metrics.source_files.length && metrics.test_files.length && ci?.passed ? 1 : 0;
+    const review = data.reviews.findLast(r => r.assignment_id === assignment.id && r.head === head);
+    metrics.R = review?.rating ?? 0;
+    const day = schoolDay();
+    const entry = { id: crypto.randomUUID(), version: scoreVersion, user_id: req.user.id, assignment_id: assignment.id, node_id: assignment.node_id,
+      repo: assignment.repo, base: assignment.scoring_base, head, push_id: receipt.id, ranges,
+      track_title: NODE_INDEX.get(assignment.node_id)?.track.title || assignment.track_id, node_title: assignment.node_title,
+      title, body: `System-scored ${ranges.length} authenticated push range(s): ${metrics.source_files.length} source file(s), ${metrics.test_files.length} test file(s), ${metrics.L} effective lines.`, metrics, ci: ci || null, review: review || null, day, year: day.slice(0, 4), created_at: new Date().toISOString() };
+    const plan = creditPlan(data.contributions, entry);
+    Object.assign(entry, { hours: plan.hours, calculated_hours: plan.calculated, credited_metrics: plan.metrics, status: plan.status, merged_ids: plan.merged_ids });
+    const previous = structuredClone(data.contributions);
+    const oldStatus = assignment.status;
+    for (const c of data.contributions) if (plan.merged_ids.includes(c.id)) { c.status = 'merged'; c.merged_into = entry.id; }
+    data.contributions.push(entry);
+    assignment.status = 'done';
+    try { save(); } catch { data.contributions = previous; assignment.status = oldStatus; throw new Error('Could not save the result. Your task is still open; please retry.'); }
+    res.status(201).json(publicContribution(entry));
+  } catch (err) { res.status(422).json({ error: err.message || 'Scoring failed; no hours were awarded.' }); }
+  finally { repoLocks.delete(assignment.repo); }
 });
 
 // ── Forum ─────────────────────────────────────────────────────────────────────
@@ -406,8 +512,8 @@ app.delete('/api/forum/:id', requireAuth, (req, res) => {
 });
 
 // ── Git smart-HTTP (per-assignment repos: clone / fetch / push) ───────────────
-// Open in this self-hosted setup; the clone URL carries the member's login.
-app.use('/git', gitHttpBackend);
+// Workspace credentials and membership are required for Git access.
+app.use('/git', gitRateLimit, authorizeGit, gitHttpBackend);
 
 // ── Static front-end (production) + SPA fallback ──────────────────────────────
 if (existsSync(DIST)) {

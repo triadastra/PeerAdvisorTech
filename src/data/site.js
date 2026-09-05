@@ -6,6 +6,14 @@
 import { projects } from './projects';
 import { people } from './people';
 
+// Counts that appear in prose derive from the roster, on the same principle as
+// the stats block at the bottom of this file: hardcoding them means they go
+// stale the next time a project lands or retires.
+const NUMBER_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+const spell = (n) => NUMBER_WORDS[n] ?? String(n);
+export const projectCountWord = spell(projects.length);
+const ProjectCountWord = projectCountWord.charAt(0).toUpperCase() + projectCountWord.slice(1);
+
 export const site = {
   name: 'Peer Advisor Tech Department',
   shortName: 'PATD',
@@ -15,7 +23,7 @@ export const site = {
   kicker: 'School Board Service on Technological Project Maintenance and Development',
   headline: ['We build the software', 'student life runs on.'],
   lede:
-    'Peer Advisor Tech Department is a student-run engineering studio. AI Central is what we’ve built: eight connected projects — from an AI design studio to the infrastructure beneath them — shipping production software the whole campus uses, and training the people who build it.',
+    `Peer Advisor Tech Department is a student-run engineering studio. AI Central is what we’ve built: ${projectCountWord} connected projects — from an AI design studio to the infrastructure beneath them — shipping production software the whole campus uses, and training the people who build it.`,
 
   // Top navigation. Items with `route` navigate; items with `target` scroll to a
   // section on the home page.
@@ -23,14 +31,13 @@ export const site = {
     { label: 'Work', target: 'work' },
     { label: 'Team', route: '/team' },
     { label: 'About', target: 'about' },
-    { label: 'Join', route: '/join' },
   ],
 
   // Capabilities (#about) — the five disciplines across the studio.
   capabilities: {
     heading: 'What we build',
     blurb:
-      'Full-stack product engineering across the studio — from a single AI editor to the platform and infrastructure beneath it. Eleven projects, one network.',
+      `Full-stack product engineering across the studio — from a single AI editor to the platform and infrastructure beneath it. ${ProjectCountWord} projects, one network.`,
     items: [
       { title: 'Platform', text: 'Creative and developer platforms — an AI layout studio, and a system for clubs to build and ship their own apps.' },
       { title: 'AI / ML', text: 'Retrieval-grounded assistants and agents, tuned for real curriculum and real student workflows.' },
@@ -45,10 +52,9 @@ export const site = {
     heading: ['Have a project,', 'or want to build with us?'],
     blurb:
       'We take on campus partnerships and onboard new members every semester. No résumé required — bring the curiosity.',
-    primary: { label: 'Start a conversation', href: 'mailto:patech@standardcas.org?subject=Working%20with%20AI%20Central' },
-    secondary: { label: 'Become a member', to: '/join' },
+    primary: { label: 'Start a conversation', href: 'mailto:patech.shsid@outlook.com?subject=Working%20with%20AI%20Central' },
     links: [
-      { label: 'Email', value: 'patech@standardcas.org', href: 'mailto:patech@standardcas.org' },
+      { label: 'Email', value: 'patech.shsid@outlook.com', href: 'mailto:patech.shsid@outlook.com' },
       { label: 'GitHub', value: 'github.com/peer-advisor-tech', href: 'https://github.com/peer-advisor-tech' },
       { label: 'SharedSpace', value: 'ss.standardcas.org', href: 'https://ss.standardcas.org' },
     ],

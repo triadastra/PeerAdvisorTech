@@ -14,7 +14,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(here, '.data');
 const DB_PATH = join(DATA_DIR, 'db.json');
 
-const EMPTY = { users: [], tasks: [], events: [], assignments: [], forum: [] };
+const EMPTY = { users: [], tasks: [], events: [], assignments: [], forum: [], contributions: [], demo_contributions: [], pushes: [], ci_results: [], reviews: [] };
 
 function read() {
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });

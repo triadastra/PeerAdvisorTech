@@ -1,22 +1,26 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SpecArt from './SpecArt';
+import StandardCASWordmark from './StandardCASWordmark';
 
 const pad = (n) => String(n).padStart(2, '0');
-const DURATION = 2800; // ms — the ~3s intro, then hand off to the detail page
+const INTRO_MS = 2800;
+const BRANDED_PROJECTS = new Set(['fyona', 'synonance', 'launchpad', 'sharedspace', 'session']);
 
 // Full-screen title card that animates what a spec does, then calls onDone.
 // Click anywhere, press a key, or hit Skip to advance early.
 export default function SpecIntro({ project, onDone }) {
+  const branded = BRANDED_PROJECTS.has(project.id);
+  const duration = INTRO_MS + (branded ? 1000 : 0);
   useEffect(() => {
-    const t = setTimeout(onDone, DURATION);
+    const t = setTimeout(onDone, duration);
     const onKey = () => onDone();
     window.addEventListener('keydown', onKey);
     return () => {
       clearTimeout(t);
       window.removeEventListener('keydown', onKey);
     };
-  }, [onDone]);
+  }, [onDone, duration]);
 
   return (
     <motion.div
@@ -38,6 +42,7 @@ export default function SpecIntro({ project, onDone }) {
         Skip →
       </button>
 
+      <motion.div className="flex flex-col items-center" initial={{ opacity: 1 }} animate={{ opacity: branded ? 0 : 1 }} transition={{ delay: (INTRO_MS - 160) / 1000, duration: 0.16 }}>
       <div className="relative w-52 h-52 md:w-64 md:h-64 text-ink-100">
         <SpecArt id={project.id} />
       </div>
@@ -53,11 +58,18 @@ export default function SpecIntro({ project, onDone }) {
         <p className="mt-4 text-ink-400 max-w-md mx-auto">{project.caption}</p>
       </motion.div>
 
+      </motion.div>
+      {branded && (
+        <motion.div className="absolute inset-0 flex items-center justify-center text-ink-50 pointer-events-none" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: INTRO_MS / 1000, duration: 0 }}>
+          <StandardCASWordmark delay={INTRO_MS / 1000} />
+        </motion.div>
+      )}
+
       <motion.div
         className="absolute bottom-0 left-0 h-[2px] bg-acid-500"
         initial={{ width: '0%' }}
         animate={{ width: '100%' }}
-        transition={{ duration: DURATION / 1000, ease: 'linear' }}
+        transition={{ duration: duration / 1000, ease: 'linear' }}
       />
     </motion.div>
   );

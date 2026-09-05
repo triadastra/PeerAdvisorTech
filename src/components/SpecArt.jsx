@@ -244,7 +244,35 @@ function CompetitionLists() {
   );
 }
 
+/* Session — host a lab/startup, recruit a team, confirm a meeting. */
+function Session() {
+  return (
+    <Frame>
+      {/* The shared home draws first. */}
+      <motion.rect x="24" y="20" width="152" height="160" rx="12" stroke={INK} {...base} {...draw(0, 0.65)} />
+      <motion.path d="M24 48 H176" stroke={DIM} {...base} {...draw(0.15, 0.4)} />
+      <motion.path d="M39 34 H70" stroke={ACID} {...base} {...draw(0.2, 0.4)} />
+      {[151, 162].map(x => <motion.circle key={x} cx={x} cy="34" r="2" fill={DIM} style={popStyle} {...pop(0.3)} />)}
+      {/* Two people join the same team. */}
+      {[65, 130].map((x, i) => (
+        <motion.g key={x} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + i * 0.22, duration: 0.35 }}>
+          <circle cx={x} cy="70" r="8" stroke={INK} {...base} />
+          <path d={`M${x - 14} 96 C${x - 14} 79 ${x + 14} 79 ${x + 14} 96`} stroke={INK} {...base} />
+        </motion.g>
+      ))}
+      <motion.path d="M87 82 H108 M103 77 L108 82 L103 87" stroke={ACID} {...base} {...draw(0.95, 0.35)} />
+      {/* A calendar appears, then one shared time is booked. */}
+      <motion.rect x="49" y="112" width="102" height="51" rx="5" stroke={INK} {...base} {...draw(1.2, 0.4)} />
+      <motion.path d="M49 127 H151 M69 108 V117 M130 108 V117" stroke={DIM} {...base} {...draw(1.3, 0.35)} />
+      {[66, 88, 110].map((x, i) => <motion.rect key={x} x={x} y="138" width="9" height="9" rx="2" fill={DIM} style={popStyle} {...pop(1.45 + i * 0.08)} />)}
+      <motion.rect x="127" y="134" width="18" height="20" rx="4" fill={ACID} fillOpacity="0.16" style={popStyle} {...pop(1.8)} />
+      <motion.path d="M130 144 L134 148 L142 138" stroke={ACID} {...base} {...draw(1.95, 0.3)} />
+    </Frame>
+  );
+}
+
 const ART = {
+  session: Session,
   'club-alliances': ClubAlliances,
   fyona: Fyona,
   synonance: Synonance,

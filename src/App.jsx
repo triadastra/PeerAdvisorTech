@@ -8,7 +8,6 @@ import WorkIndex from './components/WorkIndex';
 import People from './components/People';
 import PersonPage from './components/PersonPage';
 import ProjectDetail from './components/ProjectDetail';
-import Join from './components/Join';
 import Contact from './components/Contact';
 import Access from './components/Access';
 import Workspace from './components/workspace/Workspace';
@@ -71,9 +70,6 @@ function Nav() {
           <button onClick={() => navigate(user ? '/workspace' : '/access')} className="kicker text-ink-300 hover:text-ink-50 transition-colors">
             {user ? 'Workspace' : 'Sign in'}
           </button>
-          <button onClick={() => navigate(user ? '/workspace' : '/access')} className="kicker text-ink-950 bg-acid-500 px-4 py-2 hover:bg-acid-400 transition-colors">
-            {user ? 'Open workspace →' : 'Workspace →'}
-          </button>
         </div>
 
         <button
@@ -95,9 +91,6 @@ function Nav() {
           ))}
           <button onClick={() => { setOpen(false); navigate(user ? '/workspace' : '/access'); }} className="text-left font-display text-2xl text-ink-100 py-2">
             {user ? 'Workspace' : 'Sign in'}
-          </button>
-          <button onClick={() => { setOpen(false); navigate(user ? '/workspace' : '/access'); }} className="mt-4 kicker text-ink-950 bg-acid-500 px-4 py-3 text-center">
-            {user ? 'Open workspace →' : 'Workspace →'}
           </button>
         </div>
       </motion.div>
@@ -265,7 +258,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/team" element={<People />} />
             <Route path="/team/:id" element={<PersonPage />} />
-            <Route path="/join" element={<Join />} />
+            <Route path="/join" element={<Navigate to="/" replace />} />
             <Route path="/project/:id" element={<ProjectPage />} />
             <Route path="/access" element={<Access />} />
             <Route path="/workspace" element={<RequireAuth><Workspace /></RequireAuth>} />

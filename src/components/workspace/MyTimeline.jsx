@@ -38,10 +38,10 @@ export default function MyTimeline({ ctx }) {
   if (myTracks.length === 0) {
     return (
       <div>
-        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">Your timeline</h1>
-        <p className="mt-3 text-ink-300 max-w-lg">Nothing here yet. Head to <span className="text-ink-100">Groups &amp; Tasks</span>, pick a step to work on, and it’ll show up on your timeline.</p>
+        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">My builds</h1>
+        <p className="mt-3 text-ink-300 max-w-lg">Nothing here yet. Head to <span className="text-ink-100">Explore projects</span>, pick a step to work on, and it’ll show up on your timeline.</p>
         <button onClick={() => go('Groups & Tasks')} className="mt-6 kicker text-ink-950 bg-acid-500 px-5 py-3 hover:bg-acid-400 transition-colors">
-          Browse groups &amp; tasks →
+          Explore projects →
         </button>
       </div>
     );
@@ -52,7 +52,7 @@ export default function MyTimeline({ ctx }) {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">Your timeline</h1>
+        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">My builds</h1>
         <p className="mt-2 kicker text-ink-500">{myAssignments.length} step{myAssignments.length === 1 ? '' : 's'} · {myTracks.length} group{myTracks.length === 1 ? '' : 's'} · select a node to act on it</p>
       </div>
 
@@ -118,6 +118,8 @@ export default function MyTimeline({ ctx }) {
 
             {a ? (
               <div className="mt-5 space-y-3">
+                <button onClick={() => go('Contributions')} className="studio-primary">Finish & score my work →</button>
+                <p className="text-xs text-ink-300">Push your code to main first. Finish your task in Contributions to calculate credited hours.</p>
                 {a.members?.length > 0 && (
                   <div className="kicker text-ink-500">Team · <span className="text-ink-200">{a.members.join(', ')}</span></div>
                 )}

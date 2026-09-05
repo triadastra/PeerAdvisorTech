@@ -1,10 +1,8 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { site } from '../data/site';
 
 export default function Contact() {
   const reduce = useReducedMotion();
-  const navigate = useNavigate();
   const { contact } = site;
 
   return (
@@ -28,15 +26,7 @@ export default function Contact() {
             <a href={contact.primary.href} className="kicker text-ink-950 bg-acid-500 px-6 py-3.5 hover:bg-acid-400 transition-colors">
               {contact.primary.label} →
             </a>
-            {contact.secondary.to ? (
-              <button onClick={() => navigate(contact.secondary.to)} className="kicker text-ink-200 hover:text-ink-50 px-2 py-3.5 link-underline">
-                {contact.secondary.label} →
-              </button>
-            ) : (
-              <a href={contact.secondary.href} className="kicker text-ink-200 hover:text-ink-50 px-2 py-3.5 link-underline">
-                {contact.secondary.label} →
-              </a>
-            )}
+
           </div>
         </div>
 

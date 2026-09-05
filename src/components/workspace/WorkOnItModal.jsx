@@ -114,7 +114,7 @@ export default function WorkOnItModal({ modal, assignments, onConfirm, onClose, 
                     <div>git push origin main</div>
                   </div>
                   <p className="mt-2 kicker text-ink-600 normal-case tracking-normal leading-relaxed">
-                    Push to upload, fetch to pull the team’s work, and open a merge when your step is ready. It’s a real repo on our platform — no extra account.
+                    When Git asks for a password, use your workspace password. Push your work to main, then open Contributions and finish the task to calculate credited hours.
                   </p>
                 </div>
               </div>

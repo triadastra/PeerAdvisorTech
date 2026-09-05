@@ -3,14 +3,18 @@
 //  When a member commits to a node they get a clone URL keyed to their login;
 //  `git clone` / `fetch` / `push` all work against the running server via
 //  `git http-backend` (no extra service). Repos live under server/.data/repos
-//  (gitignored). Access is open in this self-hosted setup — the URL carries
-//  the member's login as the username, matching "username = default login".
+//  (gitignored). Git HTTP requires workspace credentials and task membership.
+//  Successful main updates are recorded against the authenticated student.
 // ─────────────────────────────────────────────────────────────────────────
 
+import crypto from 'node:crypto';
 import { spawn, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { data, save } from './store.js';
+import { verifyPassword } from './auth.js';
+import { repoLocks } from './scoring.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const REPOS_DIR = join(here, '.data', 'repos');
@@ -43,6 +47,8 @@ export function ensureRepo(slug, { title = 'PA Tech task', login = 'member' } = 
   mkdirSync(REPOS_DIR, { recursive: true });
   execFileSync('git', ['init', '--bare', '-b', 'main', repo]);
   execFileSync('git', ['-C', repo, 'config', 'http.receivepack', 'true']);
+  execFileSync('git', ['-C', repo, 'config', 'receive.denyNonFastForwards', 'true']);
+  execFileSync('git', ['-C', repo, 'config', 'receive.denyDeletes', 'true']);
   execFileSync('git', ['-C', repo, 'config', 'http.uploadpack', 'true']);
 
   // Seed an initial commit via a throwaway worktree, then push into the bare.
@@ -75,6 +81,32 @@ export function cloneUrl(req, slug, login) {
   return `${proto}://${user}@${host}/git/${slug}.git`;
 }
 
+export function repoHead(slug) {
+  try { return execFileSync('git', ['-C', join(REPOS_DIR, `${slug}.git`), 'rev-parse', '--verify', 'refs/heads/main^{commit}'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return null; }
+}
+
+// Git credentials identify the uploader, never commit-author text or headers.
+export function authorizeGit(req, res, next) {
+  const match = req.path.match(/^\/([a-z0-9-]+)\.git(?:\/|$)/);
+  const assignment = match && data.assignments.find(a => a.repo === match[1]);
+  let user;
+  if (req.headers.authorization?.startsWith('Basic ')) {
+    const credentials = Buffer.from(req.headers.authorization.slice(6), 'base64').toString();
+    const i = credentials.indexOf(':');
+    const login = credentials.slice(0, i).toLowerCase();
+    const candidates = data.users.filter(u => u.email === login || u.email.split('@')[0] === login);
+    if (i > 0 && candidates.length === 1 && verifyPassword(credentials.slice(i + 1), candidates[0].passwordHash)) user = candidates[0];
+  }
+  if (!user) { res.set('WWW-Authenticate', 'Basic realm="PA Tech Git"'); return res.status(401).end('Use your workspace email and password.'); }
+  if (!assignment || !assignment.member_ids.includes(user.id)) return res.status(403).end('Join this task before accessing its repository.');
+  const pushing = req.method === 'POST' && req.path.endsWith('/git-receive-pack');
+  if (pushing && assignment.status === 'done') return res.status(409).end('This task has been finished.');
+  if (pushing && repoLocks.has(assignment.repo)) return res.status(409).end('Repository busy; retry shortly.');
+  req.gitUser = user;
+  req.gitAssignment = assignment;
+  next();
+}
+
 // Express handler: bridge HTTP ↔ `git http-backend` (smart HTTP, CGI-style).
 // Mount at '/git' — req.url here is already relative to that prefix.
 export function gitHttpBackend(req, res) {
@@ -86,6 +118,14 @@ export function gitHttpBackend(req, res) {
   const pathInfo = qIdx === -1 ? req.url : req.url.slice(0, qIdx);
   const queryString = qIdx === -1 ? '' : req.url.slice(qIdx + 1);
 
+  const assignment = req.gitAssignment;
+  const pushing = req.method === 'POST' && pathInfo.endsWith('/git-receive-pack');
+  const before = pushing ? repoHead(assignment.repo) : null;
+  if (pushing) {
+    repoLocks.add(assignment.repo);
+    execFileSync('git', ['-C', join(REPOS_DIR, `${assignment.repo}.git`), 'config', 'receive.denyNonFastForwards', 'true']);
+    execFileSync('git', ['-C', join(REPOS_DIR, `${assignment.repo}.git`), 'config', 'receive.denyDeletes', 'true']);
+  }
   const child = spawn('git', ['http-backend'], {
     env: {
       ...process.env,
@@ -96,7 +136,7 @@ export function gitHttpBackend(req, res) {
       REQUEST_METHOD: req.method,
       CONTENT_TYPE: req.headers['content-type'] || '',
       CONTENT_LENGTH: req.headers['content-length'] || '',
-      REMOTE_USER: (req.headers['x-remote-user'] || 'member').toString().slice(0, 64),
+      REMOTE_USER: req.gitUser.email,
       REMOTE_ADDR: req.socket?.remoteAddress || '',
     },
   });
@@ -105,8 +145,20 @@ export function gitHttpBackend(req, res) {
 
   const chunks = [];
   child.stdout.on('data', (c) => chunks.push(c));
-  child.on('error', () => { if (!res.headersSent) res.status(500).end('git backend error'); });
-  child.on('close', () => {
+  child.stdin.on('error', () => {});
+  child.on('error', () => { if (pushing) repoLocks.delete(assignment.repo); if (!res.headersSent) res.status(500).end('git backend error'); });
+  child.on('close', (code) => {
+    if (pushing) {
+      const head = repoHead(assignment.repo);
+      try {
+        if (code === 0 && head && head !== before) {
+          data.pushes.push({ id: crypto.randomUUID(), repo: assignment.repo, user_id: req.gitUser.id, before, head, created_at: new Date().toISOString() });
+          try { save(); } catch { data.pushes.pop(); throw new Error('Push receipt could not be saved.'); }
+        }
+      } catch { res.status(500).end('Code uploaded, but credit receipt failed. Contact the administrator before finishing.'); return; }
+      finally { repoLocks.delete(assignment.repo); }
+    }
+    if (res.writableEnded) return;
     const buf = Buffer.concat(chunks);
     const sep = buf.indexOf('\r\n\r\n');
     if (sep === -1) { res.status(200).end(buf); return; }
