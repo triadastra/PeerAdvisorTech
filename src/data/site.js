@@ -30,7 +30,6 @@ export const site = {
   nav: [
     { label: 'Work', target: 'work' },
     { label: 'Team', route: '/team' },
-    { label: 'About', target: 'about' },
   ],
 
   // Capabilities (#about) — the five disciplines across the studio.

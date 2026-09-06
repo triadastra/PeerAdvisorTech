@@ -67,7 +67,7 @@ function Nav() {
               {item.label}
             </button>
           ))}
-          <button onClick={() => navigate(user ? '/workspace' : '/access')} className="kicker text-ink-300 hover:text-ink-50 transition-colors">
+          <button onClick={() => navigate(user ? '/workspace' : '/access')} className="kicker bg-acid-500 text-ink-950 px-5 py-2.5 hover:bg-acid-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid-500">
             {user ? 'Workspace' : 'Sign in'}
           </button>
         </div>
@@ -89,7 +89,7 @@ function Nav() {
               {item.label}
             </button>
           ))}
-          <button onClick={() => { setOpen(false); navigate(user ? '/workspace' : '/access'); }} className="text-left font-display text-2xl text-ink-100 py-2">
+          <button onClick={() => { setOpen(false); navigate(user ? '/workspace' : '/access'); }} className="self-start mt-4 kicker bg-acid-500 text-ink-950 px-5 py-3 hover:bg-acid-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-acid-500">
             {user ? 'Workspace' : 'Sign in'}
           </button>
         </div>

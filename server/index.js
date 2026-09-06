@@ -191,6 +191,17 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ user: user ? publicUser(user) : null });
 });
 
+// Public catalog: deliberately exclude login details and private account fields.
+app.get('/api/team', (_req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json(data.users.map((u) => ({
+    id: `member-${u.id}`, name: u.name, title: u.role || 'Member',
+    status: 'active', leads: [],
+    avatar: u.name.trim().split(/\s+/).map((part) => Array.from(part)[0]).slice(0, 2).join('').toUpperCase(),
+    insights: 'PA Tech member building services for our school.',
+  })));
+});
+
 // ── Profiles (team) ────────────────────────────────────────────────────────────
 app.get('/api/profiles', requireAuth, (_req, res) => {
   res.json(data.users.map((u) => ({ id: u.id, name: u.name, role: u.role, vid: u.vid })));

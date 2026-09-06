@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { people } from '../data/people';
+import { useTeam } from '../lib/useTeam';
 import { projects, liveLeads } from '../data/projects';
 import ProfileRing from './ProfileRing';
 import Contact from './Contact';
@@ -20,7 +20,10 @@ function Section({ title, children }) {
 export default function PersonPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { people, loading, error } = useTeam();
   const person = people.find((p) => p.id === id);
+
+  if (!person && (loading || error)) return <div className="min-h-screen flex items-center justify-center text-ink-300" role="status">{loading ? 'Loading profile…' : 'Profile temporarily unavailable. We’ll retry shortly.'}</div>;
 
   if (!person) {
     return (
@@ -42,7 +45,7 @@ export default function PersonPage() {
   const derived = person.status === 'historical' ? [] : [
     ['Status', person.status === 'away' ? 'Away' : 'Active'],
   ];
-  const infobox = person.facts ? [...person.facts, ...derived] : [['Role', person.title], ['Class', `’${person.year}`], ...derived];
+  const infobox = person.facts ? [...person.facts, ...derived] : [['Role', person.title], ...(person.year ? [['Class', `’${person.year}`]] : []), ...derived];
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
@@ -54,7 +57,7 @@ export default function PersonPage() {
           <div className="mt-8 border-b border-ink-800 pb-10">
             <div className="kicker text-acid-500 mb-4">{person.title}</div>
             <h1 className="font-display text-5xl md:text-7xl font-semibold tracking-[-0.02em] text-ink-50 leading-[0.95]">
-              {person.name} <span className="text-ink-500 font-normal text-3xl md:text-5xl tnum">’{person.year}</span>
+              {person.name} {person.year && <span className="text-ink-500 font-normal text-3xl md:text-5xl tnum">’{person.year}</span>}
             </h1>
             {person.headline && <p className="mt-5 max-w-3xl text-xl md:text-2xl text-ink-300 leading-snug">{person.headline}</p>}
           </div>

@@ -44,6 +44,8 @@ export const api = {
   logout: () => request('/auth/logout', { method: 'POST' }),
   me: () => request('/auth/me'),
 
+  team: () => request('/team'),
+
   profiles: () => request('/profiles'),
 
   tasks: () => request('/tasks'),

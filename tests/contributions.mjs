@@ -45,6 +45,12 @@ try {
   const alice=await call('/auth/register',{name:'Test Alice',email:'alice@example.test',password:'testpass123'});
   const bob=await call('/auth/register',{name:'Test Bob',email:'bob@example.test',password:'testpass123'});
   const reviewer=await call('/auth/register',{name:'Test Reviewer',email:'reviewer@example.test',password:'testpass123'});
+  const team = await call('/team');
+  assert.equal(team.status, 200);
+  assert.deepEqual(team.body.map(u => u.name), ['Test Alice', 'Test Bob', 'Test Reviewer']);
+  assert.equal(team.body[0].id, `member-${alice.body.user.id}`);
+  assert.ok(team.body.every(u => u.status === 'active'));
+  assert.deepEqual(Object.keys(team.body[0]).sort(), ['avatar', 'id', 'insights', 'leads', 'name', 'status', 'title']);
   reviewerIds=reviewer.body.user.id;
   await stop(); await start();
   const a=await call('/assignments',{node_id:'school-clubs:build'},alice.cookie);

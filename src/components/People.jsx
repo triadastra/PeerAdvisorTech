@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { people } from '../data/people';
+import { useTeam } from '../lib/useTeam';
 import { projects, liveLeads } from '../data/projects';
 import ProfileRing from './ProfileRing';
 import Contact from './Contact';
 
 const pad = (n) => String(n).padStart(2, '0');
 const specByNumber = Object.fromEntries(projects.map((p) => [p.spec, p]));
-const currentPeople = people.filter((p) => p.status !== 'historical');
-const historicalPeople = people.filter((p) => p.status === 'historical');
 
 // First click expands the row (which specs they lead + a summary).
 // Second click — "Open profile →" — goes inside to their page.
@@ -24,7 +22,7 @@ function PersonRow({ person, open, onToggle, onOpen, onSpec }) {
           <span className="font-display text-xl md:text-2xl font-medium text-ink-100 group-hover:text-ink-50 transition-colors truncate">
             {person.name}
           </span>
-          <span className="kicker text-ink-500 shrink-0">’{person.year}</span>
+          {person.year && <span className="kicker text-ink-500 shrink-0">’{person.year}</span>}
         </span>
         <span className="hidden lg:block kicker text-ink-500 ml-4 truncate">{person.title}</span>
         {person.status === 'away' && (
@@ -49,7 +47,7 @@ function PersonRow({ person, open, onToggle, onOpen, onSpec }) {
               </div>
               <div>
                 <div className="kicker text-acid-500 mb-3">
-                  Team · ’{person.year}
+                  Team{person.year ? ` · ’${person.year}` : ''}
                   {person.status === 'away' ? ' · Away' : ''}
                 </div>
                 <p className="max-w-2xl text-ink-300 md:text-lg leading-relaxed">{person.insights}</p>
@@ -115,6 +113,9 @@ function Group({ index, label, list, open, setOpen, onOpen, onSpec, emptyNote })
 }
 
 export default function People() {
+  const { people, loading, error } = useTeam();
+  const currentPeople = people.filter((p) => p.status !== 'historical');
+  const historicalPeople = people.filter((p) => p.status === 'historical');
   const [open, setOpen] = useState(null);
   const navigate = useNavigate();
   const onOpen = (id) => navigate(`/team/${id}`);
@@ -133,6 +134,8 @@ export default function People() {
           </p>
         </div>
 
+        {loading && <p className="mt-6 text-ink-400" role="status">Loading registered members…</p>}
+        {error && <p className="mt-6 text-ink-400" role="status">Registered members are temporarily unavailable. We’ll retry shortly.</p>}
         <Group index="01" label="Current Team" list={currentPeople} open={open} setOpen={setOpen} onOpen={onOpen} onSpec={onSpec} />
         <Group index="02" label="Historical Team" list={historicalPeople} open={open} setOpen={setOpen} onOpen={onOpen} onSpec={onSpec} />
       </div>
