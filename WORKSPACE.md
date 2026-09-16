@@ -187,3 +187,5 @@ Members start or join published tasks. The first member starts that task’s 24-
 Project/task metadata and Git repositories persist in Launchpad/data/patech-teamwork. Existing single tasks migrate to one-task projects without changing their IDs or clone URLs. The old standalone task publication endpoint is disabled. GitHub credentials remain in Launchpad; PA Tech holds only the app-scoped OAuth token in a secure HTTP-only cookie.
 
 Admins can archive or delete tasks from Explore projects or My builds. Use Show archived tasks → Restore task to bring an archived task back without restarting its recruitment window. Archived work is read-only. Deletion requires confirmation and removes task access; existing GitHub branches and PRs are not changed.
+
+To extend an existing project, admins select Add task on its project card, enter a title and instructions, and publish. The new task inherits the project repository and branch and gets its own recruitment window on first join; existing tasks are unchanged.

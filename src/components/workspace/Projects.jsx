@@ -13,6 +13,7 @@ export default function Projects({ ctx, mine = false }) {
   const [repos, setRepos] = useState([]), [branches, setBranches] = useState([]), [repository, setRepository] = useState(''), [base, setBase] = useState('');
   const [device, setDevice] = useState(null), [credential, setCredential] = useState(''), [page, setPage] = useState(1), [branchPage, setBranchPage] = useState(1);
   const [query, setQuery] = useState('');
+  const [addingTo, setAddingTo] = useState(null), [taskTitle, setTaskTitle] = useState(''), [taskInstructions, setTaskInstructions] = useState('');
   const [showArchived, setShowArchived] = useState(false), [deleting, setDeleting] = useState(null);
   const [now, tick] = useState(Date.now);
   useEffect(() => { const timer = setInterval(() => tick(Date.now()), 1000); return () => clearInterval(timer); }, []);
@@ -76,7 +77,17 @@ export default function Projects({ ctx, mine = false }) {
     {mine && !visible.length && <button className={button} onClick={() => ctx.go('Groups & Tasks')}>Explore projects →</button>}
     {visible.some(p => p.tasks.some(t => joined(t) && !t.archived_at && t.clone_url)) && <div className="border border-ink-800 p-4 space-y-2"><button className={button} disabled={busy} onClick={() => act(async () => { const r = await api.projectService('/credentials', {}); setCredential(r.token); })}>Generate my Git credential</button><p className="text-xs text-ink-400">Valid for 7 days. Replacing it revokes your previous credential.</p>{credential && <div><p>Copy your credential now. Keep it private.</p><code className="select-all break-all">{credential}</code><button className={button} onClick={() => setCredential('')}>Hide</button></div>}</div>}
     {visible.map(p => <article key={p.id} className="border border-ink-700">
-      <header className="p-5 border-b border-ink-800"><h2 className="font-display text-2xl text-ink-50">{p.title}</h2><p className="text-sm text-ink-300 whitespace-pre-wrap mt-2">{p.description}</p><p className="text-xs text-ink-500 mt-2">{p.tasks.length} tasks{p.repository ? ` · ${p.repository} · ${p.base}` : ''}</p></header>
+      <header className="p-5 border-b border-ink-800"><h2 className="font-display text-2xl text-ink-50">{p.title}</h2><p className="text-sm text-ink-300 whitespace-pre-wrap mt-2">{p.description}</p><p className="text-xs text-ink-500 mt-2">{p.tasks.length} tasks{p.repository ? ` · ${p.repository} · ${p.base}` : ''}</p>{info?.admin && <button className={button + ' mt-3'} disabled={busy} onClick={() => { setAddingTo(p.id); setTaskTitle(''); setTaskInstructions(''); }}>Add task</button>}</header>
+      {info?.admin && addingTo === p.id && <form className="p-5 border-b border-ink-800 space-y-3" onSubmit={e => { e.preventDefault(); act(async () => {
+        await api.projectService(`/projects/${p.id}/tasks`, { title: taskTitle, description: taskInstructions });
+        setAddingTo(null); await load(); ctx.notify('Task added to project');
+      }); }}>
+        <h3 className="text-lg text-ink-100">Add a task to {p.title}</h3>
+        <label className="block text-sm">Task title<input className={field} required maxLength={200} value={taskTitle} onChange={e => setTaskTitle(e.target.value)} /></label>
+        <label className="block text-sm">Task instructions<textarea className={field} maxLength={10000} value={taskInstructions} onChange={e => setTaskInstructions(e.target.value)} /></label>
+        <p className="text-sm text-ink-400">The 24-hour teammate window starts when someone starts this task.{p.repository ? ` Code starts from ${p.repository} · ${p.base}.` : ''}</p>
+        <div className="flex gap-3"><button className="studio-primary" disabled={busy || !taskTitle.trim()}>{busy ? 'Adding…' : 'Publish task'}</button><button type="button" className={button} disabled={busy} onClick={() => setAddingTo(null)}>Cancel</button></div>
+      </form>}
       {!p.tasks.length && <p className="p-5 text-sm text-ink-400">No active tasks in this project.</p>}
       <ol className="divide-y divide-ink-800">{p.tasks.map((t, i) => {
         const isJoined = joined(t), closed = !!t.recruiting_ends_at && now >= t.recruiting_ends_at;
