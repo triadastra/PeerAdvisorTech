@@ -74,6 +74,7 @@ export function AuthProvider({ children }) {
     authError,
     signInWithLaunchpad: async () => {
       if (!window.LaunchpadAuth) throw new Error('Reload the page to reconnect to Launchpad.');
+      window.LaunchpadAuth.state.scope = 'openid profile email';
       await window.LaunchpadAuth.signIn();
     },
     user,

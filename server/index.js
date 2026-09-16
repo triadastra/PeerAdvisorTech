@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 import './env.js';
-import { oauthEnabled, validateIdentity, provisionIdentity } from './oauth.js';
+import { oauthEnabled, oauthOrigin, validateIdentity, provisionIdentity } from './oauth.js';
 import { installGithubRoutes } from './github.js';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
@@ -46,6 +46,10 @@ const SECURE = process.env.NODE_ENV === 'production' && process.env.HTTPS === 't
 
 const app = express();
 app.use(express.json());
+app.use('/api', (req, res, next) => {
+  if (oauthEnabled() && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin && req.headers.origin !== oauthOrigin()) return res.status(403).json({ error: 'Origin not allowed.' });
+  next();
+});
 
 // Minimal cookie reader (no extra dependency).
 app.use((req, _res, next) => {
