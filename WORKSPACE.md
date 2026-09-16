@@ -180,7 +180,7 @@ credit, task completion, or the real student leaderboard.
 
 Hosted sign-in uses Launchpad OAuth when LAUNCHPAD_AUTH_REQUIRED=true. APP_ORIGIN must match the registered app origin. LAUNCHPAD_ADMIN_SUB and LAUNCHPAD_ADMIN_VID pin the app-local administrator.
 
-Only admins can create projects and publish their ordered task series, through **Explore projects → New project**. A title and at least one task are required. GitHub is optional; the admin can connect through Launchpad and choose a repository and branch. Each code task starts from the same source snapshot in its own shared repository. Project creation does not join tasks or start recruitment.
+Only admins can create projects and publish their ordered task series, through **Explore projects → New project**. A title and at least one task are required. GitHub is optional; the admin can connect through Launchpad and choose a repository (always using main). Each code task starts from the same source snapshot in its own shared repository. Project creation does not join tasks or start recruitment.
 
 Members start or join published tasks. The first member starts that task’s 24-hour recruitment window. After the deadline, existing teammates keep working but new members cannot join. Joined projects appear in **My builds**, with all tasks shown in order. Plain tasks can be marked complete by teammates; this does not award contribution hours. Code tasks retain the Git credential, clone/pull/push, and exact-commit review flow. Only the admin’s actual Launchpad login can approve a GitHub PR. There is no separate Team tasks section.
 
@@ -188,4 +188,6 @@ Project/task metadata and Git repositories persist in Launchpad/data/patech-team
 
 Admins can archive or delete tasks from Explore projects or My builds. Use Show archived tasks → Restore task to bring an archived task back without restarting its recruitment window. Archived work is read-only. Deletion requires confirmation and removes task access; existing GitHub branches and PRs are not changed.
 
-To extend an existing project, admins select Add task on its project card, enter a title and instructions, and publish. The new task inherits the project repository and branch and gets its own recruitment window on first join; existing tasks are unchanged.
+To extend an existing project, admins select Add task on its project card, enter a title and instructions, and publish. The new task inherits the project repository and uses main and gets its own recruitment window on first join; existing tasks are unchanged.
+
+New code tasks always start from the latest main branch. Clone/pull automatically merges upstream main into ongoing task repositories, preserving task commits; members can also use Update from main. Submission and admin review refresh main again and require another review if the head or base changed. Conflicts leave work intact and show local merge instructions. Archived and already-published tasks stay frozen.

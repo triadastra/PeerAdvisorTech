@@ -7,7 +7,7 @@ export function installGithubRoutes(app, { requireAuth }) {
     if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed.' });
     const token = verifyToken(req.cookies.patd_session)?.accessToken;
     if (!token) return res.status(401).json({ error: 'Sign in with Launchpad to work on projects.' });
-    if (!/^\/(me|projects|projects\/[a-f0-9-]{36}\/tasks|tasks|credentials|github\/(repos|branches|device\/(start|poll))|tasks\/[a-f0-9-]{36}\/(join|submit|complete|archive|restore|delete))$/.test(req.path)) return res.status(404).json({ error: 'Unknown project action.' });
+    if (!/^\/(me|projects|projects\/[a-f0-9-]{36}\/tasks|tasks|credentials|github\/(repos|branches|device\/(start|poll))|tasks\/[a-f0-9-]{36}\/(join|submit|complete|archive|restore|delete|sync))$/.test(req.path)) return res.status(404).json({ error: 'Unknown project action.' });
     try {
       const response = await fetch(base() + req.url, {
         method: req.method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
