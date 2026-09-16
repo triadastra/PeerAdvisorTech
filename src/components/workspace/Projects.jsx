@@ -13,6 +13,7 @@ export default function Projects({ ctx, mine = false }) {
   const [repos, setRepos] = useState([]), [branches, setBranches] = useState([]), [repository, setRepository] = useState(''), [base, setBase] = useState('');
   const [device, setDevice] = useState(null), [credential, setCredential] = useState(''), [page, setPage] = useState(1), [branchPage, setBranchPage] = useState(1);
   const [query, setQuery] = useState('');
+  const [showArchived, setShowArchived] = useState(false), [deleting, setDeleting] = useState(null);
   const [now, tick] = useState(Date.now);
   useEffect(() => { const timer = setInterval(() => tick(Date.now()), 1000); return () => clearInterval(timer); }, []);
   const act = async fn => { setBusy(true); setError(''); try { await fn(); } catch (e) { setError(e.message); } finally { setBusy(false); } };
@@ -26,7 +27,7 @@ export default function Projects({ ctx, mine = false }) {
   const updateStep = (key, patch) => setSteps(old => old.map(n => n.key === key ? { ...n, ...patch } : n));
   const moveStep = (i, delta) => setSteps(old => { const rows = [...old]; [rows[i], rows[i + delta]] = [rows[i + delta], rows[i]]; return rows; });
   const joined = t => t.members.includes(info?.user_id);
-  const visible = projects.filter(p => (!mine || p.tasks.some(joined)) && `${p.title} ${p.description} ${p.tasks.map(t => t.title).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
+  const visible = projects.map(p => ({ ...p, tasks: p.tasks.filter(t => showArchived || !t.archived_at) })).filter(p => (!mine || p.tasks.some(joined)) && `${p.title} ${p.description} ${p.tasks.map(t => t.title).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
   return <section className="space-y-6">
     <div className="flex flex-wrap justify-between items-center gap-3">
       <h1 className="font-display text-3xl md:text-4xl font-semibold text-ink-50">{mine ? 'My builds' : 'Explore projects'}</h1>
@@ -64,23 +65,32 @@ export default function Projects({ ctx, mine = false }) {
       </form>
     </section>}
     {info?.admin && <a className="text-sm underline" target="_blank" rel="noreferrer" href={info.review_url}>Review project submissions in Launchpad ↗</a>}
+    {projects.some(p => p.tasks.some(t => t.archived_at)) && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} />Show archived tasks</label>}
+    {deleting && <div role="alertdialog" aria-labelledby="delete-task-title" aria-describedby="delete-task-description" className="border border-[#fb7185] bg-ink-950 p-5 space-y-3">
+      <h2 id="delete-task-title" className="text-lg">Delete “{deleting.title}”?</h2>
+      <p id="delete-task-description" className="text-sm text-ink-300">This removes the task from its project and closes access to its shared code. Existing GitHub branches and pull requests stay unchanged. Archive instead if you want to restore the task later.</p>
+      <div className="flex gap-3"><button className={button} disabled={busy} onClick={() => setDeleting(null)}>Cancel</button><button className={button + ' text-[#fb7185]'} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${deleting.id}/delete`, { confirm_title: deleting.title }); setDeleting(null); await load(); ctx.notify('Task deleted'); })}>Delete task</button></div>
+    </div>}
     {projects.length > 0 && <input className={field} aria-label="Search projects and tasks" placeholder="Search projects and tasks" value={query} onChange={e => setQuery(e.target.value)} />}
     {ctx.projectsLoading ? <p>Loading projects…</p> : !ctx.projectError && !visible.length && <p className="text-ink-400">{query ? 'No matching projects.' : mine ? 'No tasks joined yet. Pick a task in Explore projects to get started.' : 'No projects published here yet.'}</p>}
     {mine && !visible.length && <button className={button} onClick={() => ctx.go('Groups & Tasks')}>Explore projects →</button>}
-    {visible.some(p => p.tasks.some(t => joined(t) && t.clone_url)) && <div className="border border-ink-800 p-4 space-y-2"><button className={button} disabled={busy} onClick={() => act(async () => { const r = await api.projectService('/credentials', {}); setCredential(r.token); })}>Generate my Git credential</button><p className="text-xs text-ink-400">Valid for 7 days. Replacing it revokes your previous credential.</p>{credential && <div><p>Copy your credential now. Keep it private.</p><code className="select-all break-all">{credential}</code><button className={button} onClick={() => setCredential('')}>Hide</button></div>}</div>}
+    {visible.some(p => p.tasks.some(t => joined(t) && !t.archived_at && t.clone_url)) && <div className="border border-ink-800 p-4 space-y-2"><button className={button} disabled={busy} onClick={() => act(async () => { const r = await api.projectService('/credentials', {}); setCredential(r.token); })}>Generate my Git credential</button><p className="text-xs text-ink-400">Valid for 7 days. Replacing it revokes your previous credential.</p>{credential && <div><p>Copy your credential now. Keep it private.</p><code className="select-all break-all">{credential}</code><button className={button} onClick={() => setCredential('')}>Hide</button></div>}</div>}
     {visible.map(p => <article key={p.id} className="border border-ink-700">
       <header className="p-5 border-b border-ink-800"><h2 className="font-display text-2xl text-ink-50">{p.title}</h2><p className="text-sm text-ink-300 whitespace-pre-wrap mt-2">{p.description}</p><p className="text-xs text-ink-500 mt-2">{p.tasks.length} tasks{p.repository ? ` · ${p.repository} · ${p.base}` : ''}</p></header>
+      {!p.tasks.length && <p className="p-5 text-sm text-ink-400">No active tasks in this project.</p>}
       <ol className="divide-y divide-ink-800">{p.tasks.map((t, i) => {
         const isJoined = joined(t), closed = !!t.recruiting_ends_at && now >= t.recruiting_ends_at;
-        const finished = t.status === 'done' || !!t.pr, canJoin = t.status === 'open' && !closed && !finished;
+        const archived = !!t.archived_at;
+        const finished = t.status === 'done' || !!t.pr, canJoin = !archived && t.status === 'open' && !closed && !finished;
         return <li key={t.id} className="p-5 space-y-3">
-          <div className="flex justify-between flex-wrap gap-2"><h3 className="text-lg text-ink-100">{i + 1}. {t.title}</h3><span className="text-xs text-acid-500">{finished ? t.pr ? 'PR opened' : 'Completed' : t.status === 'review' ? 'Awaiting admin review' : !t.recruiting_ends_at ? 'Ready to start' : closed ? 'In progress · recruitment closed' : `${fmtCountdown(t.recruiting_ends_at)} to find teammates`}</span></div>
+          <div className="flex justify-between flex-wrap gap-2"><h3 className="text-lg text-ink-100">{i + 1}. {t.title}</h3><span className="text-xs text-acid-500">{archived ? 'Archived' : finished ? t.pr ? 'PR opened' : 'Completed' : t.status === 'review' ? 'Awaiting admin review' : !t.recruiting_ends_at ? 'Ready to start' : closed ? 'In progress · recruitment closed' : `${fmtCountdown(t.recruiting_ends_at)} to find teammates`}</span></div>
           <p className="text-sm text-ink-400 whitespace-pre-wrap">{t.description}</p>
           <p className="text-xs text-ink-500">{t.members.length} teammate{t.members.length === 1 ? '' : 's'}{isJoined ? ' · You joined this task' : ''}</p>
-          {!isJoined && <button className={button} disabled={busy || !canJoin} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/join`, {}); await load(); ctx.notify('Task added to My builds'); })}>{!canJoin ? 'Joining closed' : t.members.length ? 'Join task' : 'Start this task'}</button>}
-          {isJoined && !finished && (t.repository ? <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/submit`, {}); await load(); ctx.notify('Submitted for admin review'); })}>Submit for admin review</button> : <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/complete`, {}); await load(); ctx.notify('Task completed'); })}>Mark task complete</button>)}
+          {info?.admin && <div className="flex flex-wrap gap-2"><button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/${archived ? 'restore' : 'archive'}`, {}); await load(); ctx.notify(archived ? 'Task restored' : 'Task archived'); })}>{archived ? 'Restore task' : 'Archive task'}</button><button className={button + ' text-[#fb7185]'} disabled={busy} onClick={() => setDeleting(t)}>Delete…</button></div>}
+          {!isJoined && !archived && <button className={button} disabled={busy || !canJoin} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/join`, {}); await load(); ctx.notify('Task added to My builds'); })}>{!canJoin ? 'Joining closed' : t.members.length ? 'Join task' : 'Start this task'}</button>}
+          {isJoined && !archived && !finished && (t.repository ? <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/submit`, {}); await load(); ctx.notify('Submitted for admin review'); })}>Submit for admin review</button> : <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/complete`, {}); await load(); ctx.notify('Task completed'); })}>Mark task complete</button>)}
           {t.pr && <a className={button} href={t.pr} target="_blank" rel="noreferrer">Open GitHub PR ↗</a>}
-          {isJoined && t.clone_url && <details><summary className="text-sm cursor-pointer">Clone, pull and push this task</summary><p className="text-xs text-ink-400 py-2">Replace YOUR_CREDENTIAL with your generated Git credential, then run these commands in a terminal.</p><pre className="bg-ink-950 p-3 text-xs text-ink-300 overflow-x-auto">{`git -c http.extraHeader="X-Patech-Git: YOUR_CREDENTIAL" clone ${t.clone_url}\ncd ${t.id}\ngit config http.${t.clone_url}.extraHeader "X-Patech-Git: YOUR_CREDENTIAL"\ngit pull --rebase origin main\n# Edit files, then:\ngit add .\ngit commit -m "Improve task"\ngit pull --rebase origin main\ngit push origin main`}</pre></details>}
+          {isJoined && !archived && t.clone_url && <details><summary className="text-sm cursor-pointer">Clone, pull and push this task</summary><p className="text-xs text-ink-400 py-2">Replace YOUR_CREDENTIAL with your generated Git credential, then run these commands in a terminal.</p><pre className="bg-ink-950 p-3 text-xs text-ink-300 overflow-x-auto">{`git -c http.extraHeader="X-Patech-Git: YOUR_CREDENTIAL" clone ${t.clone_url}\ncd ${t.id}\ngit config http.${t.clone_url}.extraHeader "X-Patech-Git: YOUR_CREDENTIAL"\ngit pull --rebase origin main\n# Edit files, then:\ngit add .\ngit commit -m "Improve task"\ngit pull --rebase origin main\ngit push origin main`}</pre></details>}
         </li>;
       })}</ol>
     </article>)}

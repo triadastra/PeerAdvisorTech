@@ -6,7 +6,7 @@ export default function Studio({ ctx }) {
   const starters = tracks.filter((t) => t.category === 'School starter');
   const [now, setNow] = useState(Date.now);
   useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
-  const projectTasks = (ctx.projects || []).flatMap(p => p.tasks);
+  const projectTasks = (ctx.projects || []).flatMap(p => p.tasks).filter(t => !t.archived_at);
   const mine = projectTasks.filter(t => t.members.includes(ctx.projectInfo?.user_id));
   const recruiting = [...assignments.filter((a) => a.status === 'recruiting'), ...projectTasks.filter(t => t.status === 'open' && t.recruiting_ends_at > now)];
   const joined = new Set([...myAssignments.map((a) => a.track_id), ...mine.map(t => t.project_id)]);
