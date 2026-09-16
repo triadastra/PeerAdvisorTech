@@ -2,7 +2,7 @@
 import { request as httpsRequest } from 'node:https';
 import { verifyToken } from './auth.js';
 export function installGithubRoutes(app, { requireAuth }) {
-  const base = () => (process.env.LAUNCHPAD_ISSUER || 'https://launchpad.standardcas.org') + '/dashboard-api/patech';
+  const base = () => (process.env.LAUNCHPAD_ISSUER || 'https://launchpad.standardcas.org') + '/api/patech';
   app.use('/api/teamwork', requireAuth, async (req, res) => {
     if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed.' });
     const token = verifyToken(req.cookies.patd_session)?.accessToken;
