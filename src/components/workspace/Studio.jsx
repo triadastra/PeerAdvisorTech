@@ -1,10 +1,16 @@
+import { useState, useEffect } from 'react';
 import { ArrowUpRight, Sparkles, Users, Flag, Code2 } from 'lucide-react';
 
 export default function Studio({ ctx }) {
   const { name, tracks, myAssignments, assignments, forum, openWorkOn, go } = ctx;
   const starters = tracks.filter((t) => t.category === 'School starter');
-  const recruiting = assignments.filter((a) => a.status === 'recruiting');
-  const joined = new Set(myAssignments.map((a) => a.track_id));
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
+  const projectTasks = (ctx.projects || []).flatMap(p => p.tasks);
+  const mine = projectTasks.filter(t => t.members.includes(ctx.projectInfo?.user_id));
+  const recruiting = [...assignments.filter((a) => a.status === 'recruiting'), ...projectTasks.filter(t => t.status === 'open' && t.recruiting_ends_at > now)];
+  const joined = new Set([...myAssignments.map((a) => a.track_id), ...mine.map(t => t.project_id)]);
+  const joinedSteps = myAssignments.length + mine.length;
   return (
     <div className="studio-home">
       <div className="studio-eyebrow"><span className="studio-live" /> THE SCHOOL BUILD CLUB <span>Small ideas. Real impact.</span></div>
@@ -42,7 +48,7 @@ export default function Studio({ ctx }) {
         </div>
       </section>}
       <section className="studio-bottom-grid">
-        <div className="studio-next"><span className="studio-eyebrow">YOUR NEXT MOVE</span><h2>{myAssignments.length ? 'Keep the momentum going.' : 'No experience? Start with curiosity.'}</h2><p>{myAssignments.length ? `You’ve joined ${myAssignments.length} project step${myAssignments.length === 1 ? '' : 's'}. Open your builds for the brief, your teammates, and your shared code.` : 'You don’t need to write code on day one. Interview a friend, sketch a screen, or test someone’s prototype. It all counts as building.'}</p><button onClick={() => go(myAssignments.length ? 'Timeline' : 'Groups & Tasks')}>{myAssignments.length ? 'Open my builds' : 'Explore the first steps'} →</button></div>
+        <div className="studio-next"><span className="studio-eyebrow">YOUR NEXT MOVE</span><h2>{joinedSteps ? 'Keep the momentum going.' : 'No experience? Start with curiosity.'}</h2><p>{joinedSteps ? `You’ve joined ${joinedSteps} project step${joinedSteps === 1 ? '' : 's'}. Open your builds for the brief, your teammates, and your shared code.` : 'You don’t need to write code on day one. Interview a friend, sketch a screen, or test someone’s prototype. It all counts as building.'}</p><button onClick={() => go(joinedSteps ? 'Timeline' : 'Groups & Tasks')}>{joinedSteps ? 'Open my builds' : 'Explore the first steps'} →</button></div>
         <div className="studio-room"><span className="studio-eyebrow">THE COMMON ROOM</span><h2>Better with a buddy.</h2><p>Find someone to build with, share a small win, or ask that question you think is too basic. We all started somewhere.</p><button onClick={() => go('Forum')}>Meet your fellow builders <ArrowUpRight size={17}/></button></div>
       </section>
       <p className="studio-footer">A sketch counts. A bug fixed counts. Helping a friend counts. Keep making things.</p>

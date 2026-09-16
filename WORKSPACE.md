@@ -176,10 +176,12 @@ hidden with the feed checkbox. They never enter scoring, yearly caps, pending
 credit, task completion, or the real student leaderboard.
 
 
-## Launchpad teamwork
+## Projects and Launchpad
 
-Hosted sign-in uses Launchpad OAuth when LAUNCHPAD_AUTH_REQUIRED=true. APP_ORIGIN must match the registered app origin. Set LAUNCHPAD_ADMIN_SUB and LAUNCHPAD_ADMIN_VID to pin the app-local administrator. Existing local profiles may be linked only after independently verifying the provider subject; email matching is not automatic.
+Hosted sign-in uses Launchpad OAuth when LAUNCHPAD_AUTH_REQUIRED=true. APP_ORIGIN must match the registered app origin. LAUNCHPAD_ADMIN_SUB and LAUNCHPAD_ADMIN_VID pin the app-local administrator.
 
-Open **Team tasks** in the workspace. The admin connects their GitHub account through Launchpad, selects a repository and source branch, and publishes a task. Members join, generate their Git credential, clone the shared repo, and pull/push with the shown commands. **Submit for admin review** freezes the submitted commit. The admin follows **Review submissions in Launchpad**, inspects the diff, and approves that commit to create a GitHub PR. Team members never receive the administrator’s GitHub credentials.
+Only admins can create projects and publish their ordered task series, through **Explore projects → New project**. A title and at least one task are required. GitHub is optional; the admin can connect through Launchpad and choose a repository and branch. Each code task starts from the same source snapshot in its own shared repository. Project creation does not join tasks or start recruitment.
 
-Requires Launchpad’s PA Tech teamwork extension. Data and Git repositories live persistently in Launchpad/data/patech-teamwork. GitHub connection and PR approval remain in Launchpad; PA Tech holds only the user’s short-lived app-scoped OAuth token in its secure HTTP-only session cookie.
+Members start or join published tasks. The first member starts that task’s 24-hour recruitment window. After the deadline, existing teammates keep working but new members cannot join. Joined projects appear in **My builds**, with all tasks shown in order. Plain tasks can be marked complete by teammates; this does not award contribution hours. Code tasks retain the Git credential, clone/pull/push, and exact-commit review flow. Only the admin’s actual Launchpad login can approve a GitHub PR. There is no separate Team tasks section.
+
+Project/task metadata and Git repositories persist in Launchpad/data/patech-teamwork. Existing single tasks migrate to one-task projects without changing their IDs or clone URLs. The old standalone task publication endpoint is disabled. GitHub credentials remain in Launchpad; PA Tech holds only the app-scoped OAuth token in a secure HTTP-only cookie.

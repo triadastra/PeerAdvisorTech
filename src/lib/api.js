@@ -41,7 +41,7 @@ export const api = {
 
   authConfig: () => request('/auth/config'),
   launchpad: (accessToken) => request('/auth/launchpad', { method: 'POST', body: { accessToken } }),
-  teamwork: (path, body) => request('/teamwork' + path, body ? { method: 'POST', body } : {}),
+  projectService: (path, body) => request('/project-service' + path, body ? { method: 'POST', body } : {}),
 
   register: (body) => request('/auth/register', { method: 'POST', body }),
   login: (body) => request('/auth/login', { method: 'POST', body }),

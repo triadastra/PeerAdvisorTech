@@ -236,6 +236,7 @@ app.get('/api/tasks', requireAuth, (_req, res) => {
 });
 
 app.post('/api/tasks', requireAuth, (req, res) => {
+  if (req.user.role !== 'Admin') return res.status(403).json({ error: 'Only admins can publish tasks.' });
   const title = String(req.body?.title || '').trim();
   if (!title) return res.status(400).json({ error: 'Title is required.' });
   const task = {

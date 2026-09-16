@@ -3,11 +3,11 @@ import { request as httpsRequest } from 'node:https';
 import { verifyToken } from './auth.js';
 export function installGithubRoutes(app, { requireAuth }) {
   const base = () => (process.env.LAUNCHPAD_ISSUER || 'https://launchpad.standardcas.org') + '/api/patech';
-  app.use('/api/teamwork', requireAuth, async (req, res) => {
+  app.use('/api/project-service', requireAuth, async (req, res) => {
     if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed.' });
     const token = verifyToken(req.cookies.patd_session)?.accessToken;
-    if (!token) return res.status(401).json({ error: 'Sign in with Launchpad to use teamwork.' });
-    if (!/^\/(me|tasks|credentials|github\/(repos|branches|device\/(start|poll))|tasks\/[a-f0-9-]{36}\/(join|submit))$/.test(req.path)) return res.status(404).json({ error: 'Unknown teamwork action.' });
+    if (!token) return res.status(401).json({ error: 'Sign in with Launchpad to work on projects.' });
+    if (!/^\/(me|projects|tasks|credentials|github\/(repos|branches|device\/(start|poll))|tasks\/[a-f0-9-]{36}\/(join|submit|complete))$/.test(req.path)) return res.status(404).json({ error: 'Unknown project action.' });
     try {
       const response = await fetch(base() + req.url, {
         method: req.method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -15,7 +15,7 @@ export function installGithubRoutes(app, { requireAuth }) {
       });
       res.set('Cache-Control', 'no-store');
       res.status(response.status).json(await response.json());
-    } catch { res.status(502).json({ error: 'Launchpad teamwork could not be reached. Try again shortly.' }); }
+    } catch { res.status(502).json({ error: 'Projects could not be reached. Try again shortly.' }); }
   });
   app.use('/team-git', (req, res) => {
     if (!/^\/[a-f0-9-]{36}\.git\/(info\/refs|git-upload-pack|git-receive-pack)$/.test(req.path)) return res.status(404).end();

@@ -6,19 +6,35 @@ import { vidFor, listTracks, listAssignments, listForum, createAssignment } from
 import { initials } from './util';
 import Contributions from './Contributions';
 import Studio from './Studio';
-import Teamwork from './Teamwork';
+import { api } from '../../lib/api';
 import './studio.css';
 import MyTimeline from './MyTimeline';
 import Groups from './Groups';
 import Forum from './Forum';
 import WorkOnItModal from './WorkOnItModal';
 
-const TABS = ['Studio', 'Teamwork', 'Timeline', 'Groups & Tasks', 'Contributions', 'Forum'];
+const TABS = ['Studio', 'Timeline', 'Groups & Tasks', 'Contributions', 'Forum'];
 
 export default function Workspace() {
   const { user, profile, signOut } = useAuth();
   const [tab, setTab] = useState('Studio');
   const [tracks, setTracks] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [projectInfo, setProjectInfo] = useState(null);
+  const [projectError, setProjectError] = useState('');
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const reloadProjects = useCallback(async () => {
+    const [info, rows] = await Promise.all([api.projectService('/me'), api.projectService('/projects')]);
+    setProjectInfo(info); setProjects(rows); setProjectError('');
+  }, []);
+  useEffect(() => {
+    let active = true;
+    Promise.all([api.projectService('/me'), api.projectService('/projects')])
+      .then(([info, rows]) => { if (active) { setProjectInfo(info); setProjects(rows); } })
+      .catch(e => { if (active) setProjectError(e.message); })
+      .finally(() => { if (active) setProjectsLoading(false); });
+    return () => { active = false; };
+  }, []);
   const [assignments, setAssignments] = useState([]);
   const [forum, setForum] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -79,14 +95,14 @@ export default function Workspace() {
   }, [modal, reload, notify]);
 
   const ctx = {
-    user, name, role, vid,
+    user, name, role, vid, projects, projectInfo, projectError, projectsLoading, reloadProjects,
     tracks, assignments, forum, myAssignments,
     loading, reload, notify, go, tab,
     openWorkOn,
     setForum,
   };
 
-  const Section = { Teamwork, Studio, Contributions, Timeline: MyTimeline, 'Groups & Tasks': Groups, Forum }[tab];
+  const Section = { Studio, Contributions, Timeline: MyTimeline, 'Groups & Tasks': Groups, Forum }[tab];
 
   return (
     <div className="student-workspace min-h-screen">
@@ -122,7 +138,7 @@ export default function Workspace() {
                   tab === t ? 'text-ink-50 border-acid-500' : 'text-ink-500 border-transparent hover:text-ink-200'
                 }`}
               >
-                {{ Teamwork: 'Team tasks', Studio: 'Home base', Timeline: 'My builds', 'Groups & Tasks': 'Explore projects', Contributions: 'Contributions', Forum: 'Common room' }[t]}
+                {{ Studio: 'Home base', Timeline: 'My builds', 'Groups & Tasks': 'Explore projects', Contributions: 'Contributions', Forum: 'Common room' }[t]}
               </button>
             ))}
           </div>

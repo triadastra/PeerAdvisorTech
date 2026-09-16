@@ -1,3 +1,4 @@
+import Projects from './Projects';
 import { useState, useEffect } from 'react';
 import { fmtCountdown } from './util';
 
@@ -17,7 +18,7 @@ function StatusPill({ status, endsAt }) {
   );
 }
 
-export default function MyTimeline({ ctx }) {
+function LegacyMyTimeline({ ctx }) {
   const { user, tracks, assignments, myAssignments, openWorkOn, go } = ctx;
   const [selected, setSelected] = useState(null); // node id
 
@@ -165,4 +166,8 @@ export default function MyTimeline({ ctx }) {
       )}
     </div>
   );
+}
+
+export default function MyTimeline({ ctx }) {
+  return <div className="space-y-10"><Projects ctx={ctx} mine />{ctx.tracks.length > 0 && <LegacyMyTimeline ctx={ctx} />}</div>;
 }

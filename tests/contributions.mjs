@@ -47,6 +47,7 @@ try {
   const alice=await call('/auth/register',{name:'Test Alice',email:'alice@example.test',password:'testpass123'});
   const bob=await call('/auth/register',{name:'Test Bob',email:'bob@example.test',password:'testpass123'});
   const reviewer=await call('/auth/register',{name:'Test Reviewer',email:'reviewer@example.test',password:'testpass123'});
+  assert.equal((await call('/tasks', { title: 'Unauthorized task', role: 'Admin' }, alice.cookie)).status, 403, 'Only admins can publish tasks through the legacy API too');
   const team = await call('/team');
   assert.equal(team.status, 200);
   assert.deepEqual(team.body.map(u => u.name), ['Test Alice', 'Test Bob', 'Test Reviewer']);

@@ -1,7 +1,8 @@
+import Projects from './Projects';
 import { useState, useEffect } from 'react';
 import { fmtCountdown } from './util';
 
-export default function Groups({ ctx }) {
+function LegacyGroups({ ctx }) {
   const { user, tracks, assignments, openWorkOn } = ctx;
   const [filter, setFilter] = useState('School starters');
   const [query, setQuery] = useState('');
@@ -88,4 +89,8 @@ export default function Groups({ ctx }) {
       </div>
     </div>
   );
+}
+
+export default function Groups({ ctx }) {
+  return <div className="space-y-10"><Projects ctx={ctx} />{ctx.tracks.length > 0 && <LegacyGroups ctx={ctx} />}</div>;
 }
