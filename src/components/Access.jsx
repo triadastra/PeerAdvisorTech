@@ -28,7 +28,7 @@ function Field({ label, hint, children }) {
 }
 
 export default function Access() {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, oauth, loading, authError, signInWithLaunchpad } = useAuth();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
@@ -122,6 +122,17 @@ export default function Access() {
           {/* ── Right: auth panel (first on small screens, sticky beside the intro on desktop) ── */}
           <aside className="order-first lg:order-none w-full lg:sticky lg:top-28">
             <div className="border border-ink-700 bg-ink-900 p-7 md:p-8">
+              {loading ? <p className="text-ink-300">Checking sign-in…</p> : oauth ? (
+                <div className="space-y-6">
+                  <h2 className="text-xl text-ink-100">Sign in with Launchpad</h2>
+                  <p className="text-ink-400">Use your StandardCAS identity to access tasks and GitHub branches.</p>
+                  {(error || authError) && <p role="alert" className="text-[#fb7185]">{error || authError}</p>}
+                  <button disabled={busy} className="w-full bg-acid-500 text-ink-950 px-6 py-3.5" onClick={async () => {
+                    setBusy(true); setError('');
+                    try { await signInWithLaunchpad(); } catch (err) { setError(err.message); setBusy(false); }
+                  }}>{busy ? 'Connecting…' : 'Continue with Launchpad →'}</button>
+                </div>
+              ) : (<>
               <div className="grid grid-cols-2 mb-8 border border-ink-700">
                 <button
                   onClick={() => { setMode('signin'); setError(''); }}
@@ -173,6 +184,7 @@ export default function Access() {
                   ? 'Access is for PA Tech members. Your profile and workspace are created on first sign-in.'
                   : 'New to the studio? Request access above.'}
               </p>
+              </>)}
             </div>
 
             <Link to="/" className="mt-6 inline-block kicker text-ink-500 hover:text-ink-200 link-underline">

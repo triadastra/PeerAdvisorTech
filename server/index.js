@@ -6,6 +6,9 @@
 //  so the whole thing runs as one origin with no CORS.
 // ─────────────────────────────────────────────────────────────────────────
 
+import './env.js';
+import { oauthEnabled, validateIdentity, provisionIdentity } from './oauth.js';
+import { installGithubRoutes } from './github.js';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import crypto from 'node:crypto';
@@ -59,19 +62,19 @@ app.use((req, _res, next) => {
 
 const publicUser = (u) => ({ id: u.id, email: u.email, name: u.name, role: u.role, vid: u.vid, joined: u.created_at?.slice(0, 7) });
 
-function setSession(res, userId) {
-  res.cookie(COOKIE, signToken({ sub: userId }), {
+function setSession(res, userId, maxAge = 30 * 24 * 60 * 60, oauth = false, accessToken = undefined) {
+  res.cookie(COOKIE, signToken({ sub: userId, oauth, accessToken }, maxAge), {
     httpOnly: true,
     sameSite: 'lax',
     secure: SECURE,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
+    maxAge: maxAge * 1000,
     path: '/',
   });
 }
 
 function currentUser(req) {
   const payload = verifyToken(req.cookies[COOKIE]);
-  if (!payload?.sub) return null;
+  if (!payload?.sub || (oauthEnabled() && !payload.oauth)) return null;
   return data.users.find((u) => u.id === payload.sub) || null;
 }
 
@@ -152,8 +155,23 @@ app.post('/api/contact/application', applicationRateLimit, async (req, res) => {
   }
 });
 
+app.get('/api/auth/config', (_req, res) => res.json({ oauth: oauthEnabled() }));
+app.post('/api/auth/launchpad', applicationRateLimit, async (req, res) => {
+  try {
+    const { identity, maxAge } = await validateIdentity(req.body?.accessToken);
+    const user = provisionIdentity(data, identity);
+    save();
+    setSession(res, user.id, maxAge, true, req.body.accessToken);
+    res.json({ user: publicUser(user) });
+  } catch (error) {
+    res.status(401).json({ error: error.message || 'OAuth sign-in failed.' });
+  }
+});
+installGithubRoutes(app, { requireAuth, data, save });
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 app.post('/api/auth/register', (req, res) => {
+  if (oauthEnabled()) return res.status(403).json({ error: 'Sign in with Launchpad.' });
   const name = String(req.body?.name || '').trim();
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
@@ -171,6 +189,7 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 app.post('/api/auth/login', (req, res) => {
+  if (oauthEnabled()) return res.status(403).json({ error: 'Sign in with Launchpad.' });
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
   const user = data.users.find((u) => u.email === email);
@@ -233,7 +252,7 @@ app.post('/api/tasks', requireAuth, (req, res) => {
 app.patch('/api/tasks/:id', requireAuth, (req, res) => {
   const task = data.tasks.find((t) => t.id === req.params.id);
   if (!task) return res.status(404).json({ error: 'Not found.' });
-  if (task.user_id !== req.user.id) return res.status(403).json({ error: 'Not your task.' });
+  if (task.user_id !== req.user.id && req.user.role !== 'Admin') return res.status(403).json({ error: 'Not your task.' });
   for (const k of ['title', 'spec', 'priority', 'status', 'due']) {
     if (k in (req.body || {})) task[k] = req.body[k];
   }
@@ -244,7 +263,7 @@ app.patch('/api/tasks/:id', requireAuth, (req, res) => {
 app.delete('/api/tasks/:id', requireAuth, (req, res) => {
   const i = data.tasks.findIndex((t) => t.id === req.params.id);
   if (i === -1) return res.status(404).json({ error: 'Not found.' });
-  if (data.tasks[i].user_id !== req.user.id) return res.status(403).json({ error: 'Not your task.' });
+  if (data.tasks[i].user_id !== req.user.id && req.user.role !== 'Admin') return res.status(403).json({ error: 'Not your task.' });
   data.tasks.splice(i, 1);
   save();
   res.status(204).end();

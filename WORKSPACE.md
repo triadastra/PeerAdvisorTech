@@ -174,3 +174,12 @@ To seed the local demo feed, stop the API and run
 fictional students. Demo rows and demo totals are explicitly labeled and can be
 hidden with the feed checkbox. They never enter scoring, yearly caps, pending
 credit, task completion, or the real student leaderboard.
+
+
+## Launchpad teamwork
+
+Hosted sign-in uses Launchpad OAuth when LAUNCHPAD_AUTH_REQUIRED=true. APP_ORIGIN must match the registered app origin. Set LAUNCHPAD_ADMIN_SUB and LAUNCHPAD_ADMIN_VID to pin the app-local administrator. Existing local profiles may be linked only after independently verifying the provider subject; email matching is not automatic.
+
+Open **Team tasks** in the workspace. The admin connects their GitHub account through Launchpad, selects a repository and source branch, and publishes a task. Members join, generate their Git credential, clone the shared repo, and pull/push with the shown commands. **Submit for admin review** freezes the submitted commit. The admin follows **Review submissions in Launchpad**, inspects the diff, and approves that commit to create a GitHub PR. Team members never receive the administrator’s GitHub credentials.
+
+Requires Launchpad’s PA Tech teamwork extension. Data and Git repositories live persistently in Launchpad/data/patech-teamwork. GitHub connection and PR approval remain in Launchpad; PA Tech holds only the user’s short-lived app-scoped OAuth token in its secure HTTP-only session cookie.

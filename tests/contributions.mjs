@@ -26,7 +26,7 @@ const dir=mkdtempSync(join(tmpdir(),'patd-score-'));
 mkdirSync(join(dir,'server','.data'),{recursive:true});
 writeFileSync(join(dir,'package.json'),'{"type":"module"}');
 symlinkSync(resolve('node_modules'),join(dir,'node_modules'));
-for(const f of ['index.js','store.js','auth.js','seed.js','git.js','scoring.js','score_diff.py']) copyFileSync(resolve('server',f),join(dir,'server',f));
+for(const f of ['env.js','oauth.js','github.js','index.js','store.js','auth.js','seed.js','git.js','scoring.js','score_diff.py']) copyFileSync(resolve('server',f),join(dir,'server',f));
 let child; const port=19371; let stderr=''; let reviewerIds='';
 async function start() {
   child=spawn(process.execPath,[join(dir,'server/index.js')],{env:{...process.env,API_PORT:String(port),SCORING_PYTHON:resolve('.venv/bin/python'),CI_REPORT_TOKEN:'local-test-secret',REVIEWER_IDS:reviewerIds},stdio:['ignore','pipe','pipe']});

@@ -6,13 +6,14 @@ import { vidFor, listTracks, listAssignments, listForum, createAssignment } from
 import { initials } from './util';
 import Contributions from './Contributions';
 import Studio from './Studio';
+import Teamwork from './Teamwork';
 import './studio.css';
 import MyTimeline from './MyTimeline';
 import Groups from './Groups';
 import Forum from './Forum';
 import WorkOnItModal from './WorkOnItModal';
 
-const TABS = ['Studio', 'Timeline', 'Groups & Tasks', 'Contributions', 'Forum'];
+const TABS = ['Studio', 'Teamwork', 'Timeline', 'Groups & Tasks', 'Contributions', 'Forum'];
 
 export default function Workspace() {
   const { user, profile, signOut } = useAuth();
@@ -85,7 +86,7 @@ export default function Workspace() {
     setForum,
   };
 
-  const Section = { Studio, Contributions, Timeline: MyTimeline, 'Groups & Tasks': Groups, Forum }[tab];
+  const Section = { Teamwork, Studio, Contributions, Timeline: MyTimeline, 'Groups & Tasks': Groups, Forum }[tab];
 
   return (
     <div className="student-workspace min-h-screen">
@@ -100,7 +101,7 @@ export default function Workspace() {
             <span className="font-mono text-[10px] w-8 h-8 border border-acid-500/30 flex items-center justify-center text-acid-500 shrink-0">{initials(name)}</span>
             <div className="hidden sm:block leading-tight">
               <div className="text-[13px] text-ink-100">{name}</div>
-              <div className="kicker text-ink-700">{vid}</div>
+              <div className="kicker text-ink-700">{vid}{role === 'Admin' ? ' · Admin' : ''}</div>
             </div>
             <button
               onClick={signOut}
@@ -121,7 +122,7 @@ export default function Workspace() {
                   tab === t ? 'text-ink-50 border-acid-500' : 'text-ink-500 border-transparent hover:text-ink-200'
                 }`}
               >
-                {{ Studio: 'Home base', Timeline: 'My builds', 'Groups & Tasks': 'Explore projects', Contributions: 'Contributions', Forum: 'Common room' }[t]}
+                {{ Teamwork: 'Team tasks', Studio: 'Home base', Timeline: 'My builds', 'Groups & Tasks': 'Explore projects', Contributions: 'Contributions', Forum: 'Common room' }[t]}
               </button>
             ))}
           </div>

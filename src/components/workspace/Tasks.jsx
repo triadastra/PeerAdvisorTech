@@ -152,7 +152,7 @@ export default function Tasks({ ctx }) {
           </div>
         )}
         {list.map((t) => {
-          const mine = t.user_id === user.id;
+          const mine = t.user_id === user.id || user.role === 'Admin';
           const done = t.status === 'done';
           return (
             <div key={t.id} className="group flex items-center gap-3 border-b border-ink-800 py-3.5">
