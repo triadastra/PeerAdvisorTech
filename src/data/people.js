@@ -61,17 +61,6 @@ export const people = [
     leads: [{ n: 5, role: 'Lead' }, { n: 4, role: 'Team' }, { n: 3, role: 'Team' }, { n: 1, role: 'Co-lead' }],
     insights:
       'An all-round developer and organizer working across web, media, design, infrastructure, logistics, and campus activities.',
-    headline: 'All-round development and management — connecting technical delivery with campus activities and operations.',
-    facts: [
-      ['Full name', 'Gordon Huang · 黄子谦'],
-      ['Class', 'SHSID · ’28'],
-      ['Fields', 'Web development, media, design, IT, networking, and operations'],
-    ],
-    bio: [
-      'Gordon Huang (Ziqian Huang) is an all-round developer and organizer who combines coding and web work with photography, video, graphics, IT, networking, and logistics.',
-      'Within PA Tech, he leads SharedSpace’s club layer — founding, affiliation, and governance — and helps run activities and the teaching work around starting a club.',
-    ],
-    focus: ['Web development', 'Management', 'Photography & video', 'Design', 'IT & networking', 'Event operations'],
   },
   {
     id: 'pete-chen', name: 'Pete Chen', year: '27', avatar: 'PC',
@@ -108,17 +97,6 @@ export const people = [
     title: 'Web & Operations',
     leads: [],
     insights: 'Works across web development, organizing, and logistics, with a strength in coordinating across students and teachers.',
-    headline: 'Web developer and organizer focused on the social and operational side of shipping campus projects.',
-    facts: [
-      ['Full name', 'Christopher Jin · 金睿清'],
-      ['Class', 'SHSID · ’29'],
-      ['Fields', 'Coding, web development, organizing, and logistics'],
-    ],
-    bio: [
-      'Christopher Jin is a web developer and organizer who contributes both technical work and the coordination needed to move projects through a school community.',
-      'He is particularly interested in the social side of delivery: communicating with different students and teachers, handling logistics, and helping teams turn ideas into workable activities.',
-    ],
-    focus: ['Web development', 'Student coordination', 'Teacher liaison', 'Logistics'],
   },
   {
     id: 'will-chen', name: 'Will Chen', year: '28', avatar: 'WC',
@@ -126,31 +104,6 @@ export const people = [
     title: 'Systems, MLOps & Deep Learning',
     leads: [],
     insights: 'Builds and ships across systems, MLOps, backend, agentic software, deep-learning research, web, and Apple-platform applications.',
-    headline: 'Systems and MLOps engineer working across deep learning, agentic software, deployment, security, and UX.',
-    facts: [
-      ['Full name', 'William Chen · 陈衢浩'],
-      ['Class', 'SHSID · ’28'],
-      ['GitHub', 'github.com/willuhd'],
-      ['Fields', 'Systems, MLOps, backend, deep learning, agentic software, cybersecurity, and UX'],
-    ],
-    bio: [
-      'Will Chen is a systems and machine-learning builder who likes hacking on difficult technical problems and turning the results into shipped software. His work spans MLOps, backend systems, agentic applications, web and Apple-platform frontends, cybersecurity, and deep-learning research and deployment.',
-      'He also works in design, video, photography, and After Effects, bringing together infrastructure-level engineering and product-facing execution.',
-    ],
-    cv: [
-      { role: 'Round 2 Gold · National Top 50', org: 'USA AI Olympiad', period: '2026', detail: 'Advanced to the second round held at MIT.' },
-      { role: 'Top-accuracy solution', org: 'SHSID Hackathon', period: '2025', detail: 'Built scholarship-selection automation that was promoted for production use and evaluated real school scholarships.' },
-      { role: 'Camera-ready presentation', org: 'ISWC / UbiComp Teenager Show', period: '2026', detail: 'VeraSight combines classical and deep-learning models to detect behavioral anomalies from facial micro-movements captured by iPhone TrueDepth, optimized for edge inference.' },
-      { role: 'Round 2 qualifier', org: 'International AI Innovators Olympiad', period: '2026', detail: 'Qualified for the AI Innovators Challenge second round at MIT.' },
-      { role: 'Presentation & technical production', org: 'SHSID Class of 2026 Graduation Ceremony', period: '2026', detail: 'Produced the talented-students segment with After Effects and supported its backend and technical delivery.' },
-    ],
-    recognition: [
-      'USA AI Olympiad 2026 — Round 2 Gold, national top 50',
-      'SHSID Hackathon 2025 — top-accuracy solution selected for production use',
-      'ISWC / UbiComp 2026 Teenager Show — camera-ready presentation',
-      'International AI Innovators Olympiad 2026 — Round 2 qualifier',
-    ],
-    focus: ['MLOps', 'Systems', 'Backend', 'Agentic software', 'Deep learning', 'Cybersecurity', 'Web & Apple platforms', 'UX & motion design'],
   },
   {
     id: 'jacen-wang', name: 'Jacen Wang', year: '26', avatar: 'JW',
