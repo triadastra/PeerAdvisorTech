@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { fmtCountdown } from './util';
+import TaskFlowModal from './TaskFlowModal';
 const field = 'w-full bg-ink-950 border border-ink-700 px-3 py-2 text-sm text-ink-100';
 const button = 'border border-ink-600 px-4 py-2 text-sm disabled:opacity-40';
 const newStep = () => ({ key: crypto.randomUUID(), title: '', description: '' });
@@ -15,9 +16,17 @@ export default function Projects({ ctx, mine = false }) {
   const [query, setQuery] = useState('');
   const [addingTo, setAddingTo] = useState(null), [taskTitle, setTaskTitle] = useState(''), [taskInstructions, setTaskInstructions] = useState('');
   const [showArchived, setShowArchived] = useState(false), [deleting, setDeleting] = useState(null);
+  const [taskFlow, setTaskFlow] = useState(null), [flowBusy, setFlowBusy] = useState(false), [flowError, setFlowError] = useState('');
   const [now, tick] = useState(Date.now);
   useEffect(() => { const timer = setInterval(() => tick(Date.now()), 1000); return () => clearInterval(timer); }, []);
   const act = async fn => { setBusy(true); setError(''); try { await fn(); } catch (e) { setError(e.message); } finally { setBusy(false); } };
+  const openTaskFlow = task => { setFlowError(''); setTaskFlow({ task, joined: joined(task) }); };
+  const flowAction = async (fn, message) => {
+    setFlowBusy(true); setFlowError('');
+    try { const result = await fn(); await load(); if (message) ctx.notify(message); return result; }
+    catch (e) { setFlowError(e.message); throw e; }
+    finally { setFlowBusy(false); }
+  };
   const loadRepos = async (n = 1) => { const rows = await api.projectService(`/github/repos?page=${n}`); setRepos(old => n === 1 ? rows : [...old, ...rows]); setPage(n); };
   const updateStep = (key, patch) => setSteps(old => old.map(n => n.key === key ? { ...n, ...patch } : n));
   const moveStep = (i, delta) => setSteps(old => { const rows = [...old]; [rows[i], rows[i + delta]] = [rows[i + delta], rows[i]]; return rows; });
@@ -91,10 +100,10 @@ export default function Projects({ ctx, mine = false }) {
           <p className="text-sm text-ink-400 whitespace-pre-wrap">{t.description}</p>
           <p className="text-xs text-ink-500">{t.members.length} teammate{t.members.length === 1 ? '' : 's'}{isJoined ? ' · You joined this task' : ''}</p>
           {info?.admin && <div className="flex flex-wrap gap-2"><button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/${archived ? 'restore' : 'archive'}`, {}); await load(); ctx.notify(archived ? 'Task restored' : 'Task archived'); })}>{archived ? 'Restore task' : 'Archive task'}</button><button className={button + ' text-[#fb7185]'} disabled={busy} onClick={() => setDeleting(t)}>Delete…</button></div>}
-          {!isJoined && !archived && <button className={button} disabled={busy || !canJoin} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/join`, {}); await load(); ctx.notify('Task added to My builds'); })}>{!canJoin ? 'Joining closed' : t.members.length ? 'Join task' : 'Start this task'}</button>}
+          {!isJoined && !archived && <button className={button} disabled={busy || !canJoin} onClick={() => openTaskFlow(t)}>{!canJoin ? 'Joining closed' : t.members.length ? 'Join task' : 'Start this task'}</button>}
           {(isJoined || info?.admin) && !archived && !finished && t.repository && <div className="space-y-2">
-            <button className={button} disabled={busy} onClick={() => act(async () => { try { const result = await api.projectService(`/tasks/${t.id}/sync`, {}); ctx.notify(result.changed ? 'Latest main merged. Pull to update your local files.' : 'Already includes latest main'); } finally { await load(); } })}>Update from main</button>
-            <p className="text-xs text-ink-400">Main is merged automatically when you clone or pull and before review. Your task’s commits are preserved.</p>
+            <button className={button} disabled={busy} onClick={() => openTaskFlow(t)}>Open Git workspace</button>
+            <p className="text-xs text-ink-400">Receive authenticated pushes, check the base-to-head diff, then send the reviewed commit to GitHub as a PR.</p>
             {t.main_sync?.status === 'current' && <p className="text-xs text-ink-400">Main checked {new Date(t.main_sync.checked_at).toLocaleString()}</p>}
             {['conflict', 'error'].includes(t.main_sync?.status) && <p role="alert" className="text-sm text-[#fb7185]">{t.main_sync.message}</p>}
             {t.main_sync?.status === 'conflict' && <details><summary className="cursor-pointer text-sm">Resolve the main merge locally</summary><pre className="bg-ink-950 p-3 text-xs overflow-x-auto">{`git pull --no-rebase origin main
@@ -105,11 +114,21 @@ git add .
 git commit
 git push origin main`}</pre></details>}
           </div>}
-          {isJoined && !archived && !finished && (t.repository ? <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/submit`, {}); await load(); ctx.notify('Submitted for admin review'); })}>Submit for admin review</button> : <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/complete`, {}); await load(); ctx.notify('Task completed'); })}>Mark task complete</button>)}
+          {isJoined && !archived && !finished && (t.repository ? <button className={button} disabled={busy} onClick={() => openTaskFlow(t)}>Receive pushes and submit →</button> : <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/complete`, {}); await load(); ctx.notify('Task completed'); })}>Mark task complete</button>)}
           {t.pr && <a className={button} href={t.pr} target="_blank" rel="noreferrer">Open GitHub PR ↗</a>}
           {isJoined && !archived && t.clone_url && <details><summary className="text-sm cursor-pointer">Clone, pull and push this task</summary><p className="text-xs text-ink-400 py-2">Replace YOUR_CREDENTIAL with your generated Git credential, then run these commands in a terminal.</p><pre className="bg-ink-950 p-3 text-xs text-ink-300 overflow-x-auto">{`git -c http.extraHeader="X-Patech-Git: YOUR_CREDENTIAL" clone ${t.clone_url}\ncd ${t.id}\ngit config http.${t.clone_url}.extraHeader "X-Patech-Git: YOUR_CREDENTIAL"\ngit pull --no-rebase origin main\n# Edit files, then:\ngit add .\ngit commit -m "Improve task"\ngit pull --no-rebase origin main\ngit push origin main`}</pre></details>}
         </li>;
       })}</ol>
     </article>)}
+    {taskFlow && <TaskFlowModal
+      entry={taskFlow}
+      info={info}
+      busy={flowBusy}
+      error={flowError}
+      onClose={() => setTaskFlow(null)}
+      onJoin={task => flowAction(() => api.projectService(`/tasks/${task.id}/join`, {}), 'Task added to My builds')}
+      onSync={task => flowAction(() => api.projectService(`/tasks/${task.id}/sync`, {}), 'Launchpad checked for pushed work')}
+      onSubmit={task => flowAction(() => api.projectService(`/tasks/${task.id}/submit`, {}), 'Submitted for admin diff review')}
+    />}
   </section>;
 }
