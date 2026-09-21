@@ -29,7 +29,44 @@
   --color-acid-400: #d4f95a;
   --color-acid-500: #c8f135;
   --color-acid-600: #a6cc14;
+
+  /* Text sitting ON the acid accent — constant in both themes */
+  --color-on-acid: #0a0908;
+
+  /* ── Corner-radius language ────────────────────────────────────────────
+     One scale everywhere: pills (full) for buttons & segmented controls,
+     s for chips, m for fields, l for tiles, xl for floating panels. */
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --radius-xl: 30px;
 }
+
+/* ── Light theme — same warm monochrome, inverted. Acid deepens one step so
+   small text keeps contrast on paper; --color-on-acid stays put. ── */
+:root[data-theme='light'] {
+  --color-ink-50:  #121110;
+  --color-ink-100: #1d1c19;
+  --color-ink-200: #2e2c27;
+  --color-ink-300: #55524a;
+  --color-ink-400: #6b685f;
+  --color-ink-500: #837f74;
+  --color-ink-600: #b4b0a4;
+  --color-ink-700: #d2cfc5;
+  --color-ink-800: #e3e0d8;
+  --color-ink-850: #ebe9e3;
+  --color-ink-900: #f2f0eb;
+  --color-ink-950: #faf9f6;
+
+  --color-acid-300: #a3e635;
+  --color-acid-400: #84cc16;
+  --color-acid-500: #65a30d;
+  --color-acid-600: #4d7c0f;
+}
+
+/* Native chrome (scrollbars, date pickers, form controls) follows the theme. */
+:root { color-scheme: dark; }
+:root[data-theme='light'] { color-scheme: light; }
 
 html {
   scroll-behavior: smooth;
@@ -43,11 +80,21 @@ body {
   color: var(--color-ink-200);
   overflow-x: hidden;
   font-feature-settings: 'cv11', 'ss01';
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* Light mode isn't a white void: warm paper with a whisper of linen weave.
+   Flat design, real texture — the weave is 2.5% warm umber at 4px. */
+:root[data-theme='light'] body {
+  background-image:
+    linear-gradient(rgba(64, 54, 38, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(64, 54, 38, 0.025) 1px, transparent 1px);
+  background-size: 4px 4px;
 }
 
 ::selection {
   background: var(--color-acid-500);
-  color: var(--color-ink-950);
+  color: var(--color-on-acid);
 }
 
 ::-webkit-scrollbar { width: 10px; }
@@ -100,6 +147,23 @@ body {
   opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+
+/* Skip-to-content link — invisible until focused */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-acid-500);
+  color: var(--color-on-acid);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: top 0.2s ease;
+}
+.skip-link:focus-visible { top: 0.75rem; }
 
 /* Blinking status dot */
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
@@ -219,6 +283,156 @@ body {
   .sponsor-ticker__track { min-height: 54px; }
 }
 
+
+/* ── Glass & depth (Apple-referencing, kept restrained) ────────────────── */
+
+/* Primary acid CTA: a quiet vertical gradient, one inset top highlight,
+   one soft colored shadow. No glow rings, no animation on idle. */
+.btn-acid {
+  background-color: var(--color-acid-500);
+  background-image: linear-gradient(
+    180deg,
+    var(--color-acid-400) 0%,
+    var(--color-acid-500) 60%,
+    var(--color-acid-600) 140%
+  );
+  color: var(--color-on-acid);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 10px 28px -14px color-mix(in srgb, var(--color-acid-500) 60%, transparent);
+  transition: filter 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
+}
+.btn-acid:hover {
+  filter: brightness(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 14px 34px -14px color-mix(in srgb, var(--color-acid-500) 70%, transparent);
+}
+.btn-acid:active { transform: translateY(1px); }
+
+/* ── Liquid glass token system ───────────────────────────────────────────
+   One material, two themes. Dark: smoked ink glass. Light: warm cream
+   glass — never pure white; the tint keeps the monochrome-luxe warmth. */
+:root {
+  --glass-bg: color-mix(in srgb, var(--color-ink-900) 66%, transparent);
+  --glass-bg-soft: color-mix(in srgb, var(--color-ink-900) 42%, transparent);
+  --glass-border: color-mix(in srgb, var(--color-ink-50) 9%, transparent);
+  --glass-edge-hi: rgba(255, 255, 255, 0.28);
+  --glass-edge-lo: rgba(255, 255, 255, 0.07);
+  --glass-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+  --glass-shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+:root[data-theme='light'] {
+  --glass-bg: color-mix(in srgb, #f5f1e8 60%, transparent);
+  --glass-bg-soft: color-mix(in srgb, #f5f1e8 42%, transparent);
+  --glass-border: rgba(64, 56, 42, 0.10);
+  --glass-edge-hi: rgba(255, 255, 255, 0.72);
+  --glass-edge-lo: rgba(255, 255, 255, 0.22);
+  --glass-shadow: 0 24px 60px rgba(64, 54, 38, 0.14);
+  --glass-shadow-soft: 0 12px 32px rgba(64, 54, 38, 0.10);
+}
+
+/* Strong floating glass (sign-in, modals). The ::before ring is the
+   liquid-glass specular edge — a gradient seen only through the border. */
+.glass-panel {
+  position: relative;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+          backdrop-filter: blur(22px) saturate(1.6);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-edge-lo), var(--glass-shadow);
+}
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(150deg, var(--glass-edge-hi), transparent 28%, transparent 72%, var(--glass-edge-lo));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Light glass for tiles and small chrome (bento, back-to-top). */
+.glass-soft {
+  position: relative;
+  background: var(--glass-bg-soft);
+  -webkit-backdrop-filter: blur(16px) saturate(1.45);
+          backdrop-filter: blur(16px) saturate(1.45);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-edge-lo), var(--glass-shadow-soft);
+}
+
+/* Nav capsule material — heavier blur + saturation, like Safari chrome. */
+.glass-nav {
+  background: color-mix(in srgb, var(--color-ink-950) 76%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+          backdrop-filter: blur(20px) saturate(1.6);
+}
+:root[data-theme='light'] .glass-nav {
+  background: color-mix(in srgb, #f7f4ec 72%, transparent);
+}
+
+/* Neumorphism (soft UI) — reserved for tiny chrome like the theme toggle.
+   In light: a warm raised disc. In dark: a shallow smoked well. */
+.neu-chip {
+  background: color-mix(in srgb, var(--color-ink-900) 70%, transparent);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.4), inset -1px -1px 2px rgba(255, 255, 255, 0.04);
+}
+:root[data-theme='light'] .neu-chip {
+  background: #f0ece1;
+  box-shadow: 5px 5px 14px rgba(64, 54, 38, 0.13), -5px -5px 14px rgba(255, 255, 255, 0.85);
+}
+
+/* Floating-chrome shadow — deep in dark, a soft warm lift in light. */
+.shadow-lift { box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5); }
+:root[data-theme='light'] .shadow-lift { box-shadow: 0 12px 32px rgba(64, 54, 38, 0.13); }
+
+/* Form fields: near-black wells in dark; warm cream with a hairline and a
+   whisper of inner shadow in light — never stark white. */
+.field-input {
+  background: var(--color-ink-950);
+  border: 1px solid var(--color-ink-700);
+  color: var(--color-ink-50);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+.field-input::placeholder { color: var(--color-ink-500); }
+.field-input:focus {
+  outline: none;
+  border-color: var(--color-acid-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-acid-500) 22%, transparent);
+}
+:root[data-theme='light'] .field-input {
+  background: #fcfaf3;
+  border-color: #d9d4c4;
+  color: var(--color-ink-50);
+  box-shadow: inset 0 1px 2px rgba(64, 54, 38, 0.06);
+}
+:root[data-theme='light'] .field-input:focus {
+  border-color: var(--color-acid-600);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-acid-500) 25%, transparent);
+}
+
+/* Ambient hero glow — a single soft radial, mostly outside the viewport.
+   Deliberately faint; the monochrome system stays in charge. */
+.hero-glow {
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 70vh;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 46% 42% at 68% 18%, color-mix(in srgb, var(--color-acid-500) 13%, transparent), transparent 70%),
+    radial-gradient(ellipse 40% 38% at 24% 8%, color-mix(in srgb, var(--color-ink-50) 5%, transparent), transparent 70%);
+  filter: blur(10px);
+}
+:root[data-theme='light'] .hero-glow {
+  background:
+    radial-gradient(ellipse 46% 42% at 68% 18%, color-mix(in srgb, var(--color-acid-500) 10%, transparent), transparent 70%),
+    radial-gradient(ellipse 40% 38% at 24% 8%, color-mix(in srgb, var(--color-acid-300) 8%, transparent), transparent 70%);
+}
 
 /* ── Reduced motion ────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

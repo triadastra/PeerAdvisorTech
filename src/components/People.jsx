@@ -75,7 +75,7 @@ function PersonRow({ person, open, onToggle, onOpen, onSpec }) {
 
                 <button
                   onClick={onOpen}
-                  className="mt-8 inline-flex items-center gap-2 kicker text-ink-950 bg-acid-500 px-5 py-2.5 hover:bg-acid-400 transition-colors"
+                  className="mt-8 inline-flex items-center gap-2 kicker rounded-full text-on-acid bg-acid-500 px-6 py-2.5 hover:bg-acid-400 transition-colors"
                 >
                   Open profile →
                 </button>

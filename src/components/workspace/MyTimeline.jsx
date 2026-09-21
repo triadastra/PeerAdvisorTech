@@ -41,7 +41,7 @@ function LegacyMyTimeline({ ctx }) {
       <div>
         <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">My builds</h1>
         <p className="mt-3 text-ink-300 max-w-lg">Nothing here yet. Head to <span className="text-ink-100">Explore projects</span>, pick a step to work on, and it’ll show up on your timeline.</p>
-        <button onClick={() => go('Groups & Tasks')} className="mt-6 kicker text-ink-950 bg-acid-500 px-5 py-3 hover:bg-acid-400 transition-colors">
+        <button onClick={() => go('Groups & Tasks')} className="mt-6 kicker text-on-acid bg-acid-500 px-5 py-3 hover:bg-acid-400 transition-colors">
           Explore projects →
         </button>
       </div>
@@ -140,7 +140,7 @@ function LegacyMyTimeline({ ctx }) {
             ) : (
               <div className="mt-5">
                 {open && <p className="kicker text-ink-500 mb-3">{open.members.join(', ')} {open.members.length > 1 ? 'are' : 'is'} on this — recruiting closes in <span className="text-acid-500">{fmtCountdown(open.recruiting_ends_at)}</span>.</p>}
-                <button onClick={() => openWorkOn(t, n)} className="kicker text-ink-950 bg-acid-500 px-5 py-2.5 hover:bg-acid-400 transition-colors">
+                <button onClick={() => openWorkOn(t, n)} className="kicker text-on-acid bg-acid-500 px-5 py-2.5 hover:bg-acid-400 transition-colors">
                   {open ? 'Join this step →' : 'Work on it →'}
                 </button>
               </div>
@@ -169,5 +169,5 @@ function LegacyMyTimeline({ ctx }) {
 }
 
 export default function MyTimeline({ ctx }) {
-  return <div className="space-y-10"><Projects ctx={ctx} mine />{ctx.tracks.length > 0 && <LegacyMyTimeline ctx={ctx} />}</div>;
+  return <div className="space-y-10">{ctx.oauth && <Projects ctx={ctx} mine />}{ctx.tracks.length > 0 && <LegacyMyTimeline ctx={ctx} />}</div>;
 }

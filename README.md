@@ -9,16 +9,17 @@ Built with **React 19, Vite, Tailwind CSS v4, React Router, Framer Motion, and L
 ## The pathway
 
 ```
-Nav (everywhere):  PATD · Work · Team · About · [ Contact ]
+Nav (everywhere):  PATD · Work · Team · Contact · [ Sign in ]
 Home (/):     Hero → Capabilities (#about) → Work (#work) → Team (#team) → Contact (#contact)
 Case study (/project/:id):   project → related work → contact
+Team (/team · /team/:id):    contributor catalog → profile pages
 ```
 
 ## Run
 
 ```bash
 npm install
-npm run dev      # local dev server
+npm run dev      # local dev server (web :3200 + API :3001)
 npm run build    # production build → dist/
 npm run preview  # preview the build
 npm run lint     # ESLint
@@ -31,18 +32,27 @@ src/
   data/
     site.js        # ← all site copy, links & derived stats (edit this)
     projects.js    # ← projects + team rosters (edit this)
+    people.js      # ← the team roster (edit this)
   components/
     LandingPage.jsx   Hero + capabilities
     WorkIndex.jsx     Ruled index of every project (#work)
-    Team.jsx          Credits masthead (#team)
+    TeamStrip.jsx     Home-page roster preview (#team)
+    People.jsx        Full contributor catalog (/team)
+    PersonPage.jsx    Member profile (/team/:id)
     Contact.jsx       Closing contact section (#contact)
     ProjectDetail.jsx Case-study page
+    Access.jsx        Register / login portal (/access)
     Reveal.jsx        Reveal-on-scroll helper (reduced-motion aware)
   lib/
     smoothScroll.js   Lenis-aware scroll helpers
-  App.jsx          Nav, routing, footer, smooth-scroll setup
+  App.jsx          Nav, routing, footer, smooth-scroll setup, page meta
   index.css        Design tokens, utilities, reduced-motion
 ```
+
+Secondary routes (`/team`, `/project/:id`, `/access`, `/workspace`) are
+code-split with `React.lazy`, so the landing bundle stays lean. `public/`
+ships `robots.txt` and a generated `sitemap.xml` — regenerate the sitemap
+when projects or people change.
 
 ## Design system
 

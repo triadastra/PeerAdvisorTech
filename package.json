@@ -19,6 +19,7 @@
     "@fontsource-variable/space-grotesk": "^5.2.10",
     "@gsap/react": "^2.1.2",
     "@tailwindcss/vite": "^4.3.0",
+    "compression": "^1.8.2",
     "docx": "^9.7.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.0",

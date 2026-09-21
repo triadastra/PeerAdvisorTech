@@ -10,6 +10,7 @@ import './env.js';
 import { oauthEnabled, oauthOrigin, validateIdentity, provisionIdentity } from './oauth.js';
 import { installGithubRoutes } from './github.js';
 import express from 'express';
+import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import crypto from 'node:crypto';
 import { existsSync } from 'node:fs';
@@ -45,7 +46,24 @@ const COOKIE = 'patd_session';
 const SECURE = process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true';
 
 const app = express();
-app.use(express.json());
+app.disable('x-powered-by');
+
+// Gzip/deflate for JSON + static assets (hashed bundles shrink ~70%).
+app.use(compression());
+
+// Baseline security headers (no extra dependency; CSP stays permissive enough
+// for the SPA while locking down framing, sniffing, and referrer leakage).
+app.use((_req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  });
+  next();
+});
+
+app.use(express.json({ limit: '256kb' }));
 app.use('/api', (req, res, next) => {
   if (oauthEnabled() && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.headers.origin && req.headers.origin !== oauthOrigin()) return res.status(403).json({ error: 'Origin not allowed.' });
   next();
@@ -94,6 +112,14 @@ const isEmail = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
 const applicationRateLimit = rateLimit({ windowMs: 60_000, limit: 5, message: { error: 'Too many submissions. Please wait a minute and try again.' } });
 const assignmentRateLimit = rateLimit({ windowMs: 60_000, limit: 30, message: { error: 'Too many assignment requests. Please wait a minute and try again.' } });
 const gitRateLimit = rateLimit({ windowMs: 60_000, limit: 120, message: { error: 'Too many git requests. Please wait a minute and try again.' } });
+// Brute-force protection for credential endpoints — slow, scrypt-verified, and
+// now capped per IP. Generous enough for real humans, useless for scripts.
+const authRateLimit = rateLimit({ windowMs: 15 * 60_000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { error: 'Too many sign-in attempts. Please wait a few minutes and try again.' } });
+
+// ── Health & readiness (used by Docker HEALTHCHECK / uptime monitors) ────────
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true, uptime: Math.round(process.uptime()), git: gitAvailable(), time: new Date().toISOString() });
+});
 
 // ── Public member applications ───────────────────────────────────────────────
 app.post('/api/contact/application', applicationRateLimit, async (req, res) => {
@@ -174,7 +200,7 @@ app.post('/api/auth/launchpad', applicationRateLimit, async (req, res) => {
 installGithubRoutes(app, { requireAuth, data, save });
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', authRateLimit, (req, res) => {
   if (oauthEnabled()) return res.status(403).json({ error: 'Sign in with Launchpad.' });
   const name = String(req.body?.name || '').trim();
   const email = String(req.body?.email || '').trim().toLowerCase();
@@ -192,12 +218,15 @@ app.post('/api/auth/register', (req, res) => {
   res.status(201).json({ user: publicUser(user) });
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', authRateLimit, (req, res) => {
   if (oauthEnabled()) return res.status(403).json({ error: 'Sign in with Launchpad.' });
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
   const user = data.users.find((u) => u.email === email);
-  if (!user || !verifyPassword(password, user.passwordHash)) {
+  // Always run one scrypt verify so "no such account" and "wrong password"
+  // take the same time — no account-enumeration timing signal.
+  const DUMMY_HASH = '00000000000000000000000000000000:' + '0'.repeat(128);
+  if (!verifyPassword(password, user ? user.passwordHash : DUMMY_HASH) || !user) {
     return res.status(401).json({ error: 'Wrong email or password.' });
   }
   setSession(res, user.id);
@@ -552,12 +581,36 @@ app.use('/git', gitRateLimit, authorizeGit, gitHttpBackend);
 
 // ── Static front-end (production) + SPA fallback ──────────────────────────────
 if (existsSync(DIST)) {
-  app.use(express.static(DIST));
+  app.use(express.static(DIST, {
+    setHeaders(res, filePath) {
+      // Vite emits content-hashed assets — safe to cache for a year.
+      if (/[.-][0-9A-Za-z_-]{8,}\.(js|css|woff2?|png|jpe?g|svg|webp)$/.test(filePath)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+      }
+    },
+  }));
+  // SPA fallback — GET pages only, and never swallow API or git traffic.
   app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) return res.sendFile(join(DIST, 'index.html'));
+    if (req.method === 'GET' && !/^\/(api|git|team-git)(\/|$)/.test(req.path)) return res.sendFile(join(DIST, 'index.html'));
     next();
   });
 }
+
+// Unknown API routes answer JSON, not the Express HTML error page.
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found.' }));
+
+// Central error handler — JSON parse failures and anything thrown upstream
+// come back as clean JSON instead of an HTML stack page.
+// eslint-disable-next-line no-unused-vars
+app.use((err, _req, res, _next) => {
+  const status = err.type === 'entity.parse.failed' ? 400 : (err.status || 500);
+  if (status >= 500) console.error('API error:', err);
+  res.status(status).json({ error: status === 400 ? 'Malformed request body.' : 'Something went wrong on our side.' });
+});
 
 const server = app.listen(PORT, () => {
   console.log(`PATD workspace API → http://localhost:${PORT}`);
@@ -571,3 +624,13 @@ server.on('error', (err) => {
   }
   process.exit(1);
 });
+
+// Graceful shutdown: stop accepting connections, drain in-flight requests,
+// and exit so Docker/systemd can restart us cleanly.
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => {
+    console.log(`\n${signal} received — shutting down gracefully…`);
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(1), 10_000).unref();
+  });
+}

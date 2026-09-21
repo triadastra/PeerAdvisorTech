@@ -58,8 +58,8 @@ export default function WorkIndex({ onProjectSelect }) {
 
   return (
     <>
-      <section id="work" className="relative border-t border-ink-800 scroll-mt-20">
-        <div className="mx-auto max-w-[1200px] px-6 py-24 md:py-32">
+      <section id="work" className="relative border-t border-ink-800 scroll-mt-24">
+        <div className="mx-auto max-w-[1200px] px-6 py-28 md:py-40">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
             <div>
               <div className="kicker text-ink-500 mb-4">[ 02 ] — Selected work</div>

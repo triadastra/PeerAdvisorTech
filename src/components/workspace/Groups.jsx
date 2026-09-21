@@ -4,7 +4,7 @@ import { fmtCountdown } from './util';
 
 function LegacyGroups({ ctx }) {
   const { user, tracks, assignments, openWorkOn } = ctx;
-  const [filter, setFilter] = useState('School starters');
+  const [filter, setFilter] = useState('All projects');
   const [query, setQuery] = useState('');
   const visible = tracks.filter((t) => (filter !== 'School starters' || t.category === 'School starter') && `${t.title} ${t.blurb} ${t.nodes.map(n => n.title + ' ' + n.detail).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
 
@@ -92,5 +92,7 @@ function LegacyGroups({ ctx }) {
 }
 
 export default function Groups({ ctx }) {
-  return <div className="space-y-10"><Projects ctx={ctx} />{ctx.tracks.length > 0 && <LegacyGroups ctx={ctx} />}</div>;
+  // Launchpad-published projects only exist under Launchpad SSO; the local
+  // seeded tracks (below) are the always-on catalog.
+  return <div className="space-y-10">{ctx.oauth && <Projects ctx={ctx} />}{ctx.tracks.length > 0 && <LegacyGroups ctx={ctx} />}</div>;
 }

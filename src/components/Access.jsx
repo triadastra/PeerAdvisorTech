@@ -4,8 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../lib/authContext';
 import { site, projectCountWord } from '../data/site';
 
-const inputCls =
-  'w-full bg-ink-950 border border-ink-700 px-3.5 py-2.5 text-ink-50 placeholder-ink-500 outline-none transition-colors focus:border-acid-500 focus:bg-ink-900';
+const inputCls = 'w-full rounded-m field-input px-4 py-2.5';
 
 const inside = [
   ['01', 'Calendar', 'Agenda + month view, every event tagged to a spec'],
@@ -121,28 +120,30 @@ export default function Access() {
 
           {/* ── Right: auth panel (first on small screens, sticky beside the intro on desktop) ── */}
           <aside className="order-first lg:order-none w-full lg:sticky lg:top-28">
-            <div className="border border-ink-700 bg-ink-900 p-7 md:p-8">
+            <div className="rounded-xl glass-panel p-7 md:p-8">
               {loading ? <p className="text-ink-300">Checking sign-in…</p> : oauth ? (
                 <div className="space-y-6">
                   <h2 className="text-xl text-ink-100">Sign in with Launchpad</h2>
                   <p className="text-ink-400">Use your StandardCAS identity to access tasks and GitHub branches.</p>
                   {(error || authError) && <p role="alert" className="text-[#fb7185]">{error || authError}</p>}
-                  <button disabled={busy} className="w-full bg-acid-500 text-ink-950 px-6 py-3.5" onClick={async () => {
+                  <button disabled={busy} className="w-full rounded-full btn-acid px-6 py-3.5" onClick={async () => {
                     setBusy(true); setError('');
                     try { await signInWithLaunchpad(); } catch (err) { setError(err.message); setBusy(false); }
                   }}>{busy ? 'Connecting…' : 'Continue with Launchpad →'}</button>
                 </div>
               ) : (<>
-              <div className="grid grid-cols-2 mb-8 border border-ink-700">
+              <div className="grid grid-cols-2 gap-1 mb-8 rounded-full border border-ink-700 bg-ink-900/70 p-1">
                 <button
                   onClick={() => { setMode('signin'); setError(''); }}
-                  className={`kicker py-2.5 transition-colors ${!isSignup ? 'bg-acid-500 text-ink-950' : 'text-ink-400 hover:text-ink-100'}`}
+                  aria-pressed={!isSignup}
+                  className={`kicker rounded-full py-2 transition-all ${!isSignup ? 'bg-acid-500 text-on-acid shadow-sm' : 'text-ink-400 hover:text-ink-100'}`}
                 >
                   Sign in
                 </button>
                 <button
                   onClick={() => { setMode('signup'); setError(''); }}
-                  className={`kicker py-2.5 border-l border-ink-700 transition-colors ${isSignup ? 'bg-acid-500 text-ink-950' : 'text-ink-400 hover:text-ink-100'}`}
+                  aria-pressed={isSignup}
+                  className={`kicker rounded-full py-2 transition-all ${isSignup ? 'bg-acid-500 text-on-acid shadow-sm' : 'text-ink-400 hover:text-ink-100'}`}
                 >
                   Request access
                 </button>
@@ -167,7 +168,7 @@ export default function Access() {
                   <button
                     type="submit"
                     disabled={busy}
-                    className="w-full kicker text-ink-950 bg-acid-500 px-6 py-3.5 hover:bg-acid-400 transition-colors disabled:opacity-70 disabled:cursor-wait"
+                    className="w-full kicker rounded-full btn-acid px-6 py-3.5 disabled:opacity-70 disabled:cursor-wait"
                   >
                     {busy ? 'Working…' : isSignup ? 'Request access →' : 'Sign in →'}
                   </button>
