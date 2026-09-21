@@ -50,7 +50,9 @@ function PersonRow({ person, open, onToggle, onOpen, onSpec }) {
                   Team{person.year ? ` · ’${person.year}` : ''}
                   {person.status === 'away' ? ' · Away' : ''}
                 </div>
-                <p className="max-w-2xl text-ink-300 md:text-lg leading-relaxed">{person.insights}</p>
+                {person.insights && (
+                  <p className="max-w-2xl text-ink-300 md:text-lg leading-relaxed">{person.insights}</p>
+                )}
 
                 {leads.length > 0 && (
                   <div className="mt-6 flex flex-wrap gap-2">

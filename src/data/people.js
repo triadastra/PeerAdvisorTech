@@ -20,38 +20,6 @@ export const people = [
       { n: 6, role: 'Lead' },
       { n: 7, role: 'Team' },
     ],
-    insights:
-      'Founder and Technical Lead of PA Tech, building the SaaS and AIaaS layer used by SHSID’s Peer Advisor program.',
-    headline:
-      'Founder & Technical Lead, Peer Advisor Technology Department · AI product and technical leadership.',
-    facts: [
-      ['Full name', 'Celsia Fan · 樊汭琳'],
-      ['Contact', 'celsiastarflare@outlook.com'],
-      ['Organization', 'Shanghai High School International Division'],
-      ['Current role', 'Founder & Technical Lead, PA Tech'],
-      ['Class', 'SHSID · ’26'],
-      ['Fields', 'Artificial intelligence, programming, research, and technical leadership'],
-    ],
-    bio: [
-      'Celsia Fan founded and leads the Peer Advisor Technology Department, the technology arm of SHSID’s student-run outreach and support system. PA Tech builds the SaaS and AIaaS layer the program runs on.',
-      'Her work focuses on AI products, technical systems, team building, and cross-functional delivery across school programs and external organizations.',
-    ],
-    cv: [
-      { role: 'Founder & Technical Lead', org: 'Peer Advisor Technology Department, SHSID', period: 'May 2026 — present', detail: 'Founded the department and leads technology, HR, administration, and planning. Built its team structure, intake process, and roadmap; shipped seven internal tools used by 30+ students and staff.' },
-      { role: 'Student Lead — Technical Specialist & Publications', org: 'SHSID Peer Advisor Program', period: 'Sep 2024 — May 2026', detail: 'Built AI transcription and flowchart tooling for interviews, video animation and subtitling tools, and publication layout systems.' },
-      { role: 'Student Assistant', org: 'Shanghai High School International Division', period: 'Nov 2024 — Jun 2025', detail: 'Supported computer-science research guidance, PA lectures and workshops, tutoring, and project startup guidance.' },
-      { role: 'Founder · Advisory role from May 2026', org: 'United AIGC Art Alliance', period: 'Mar 2023 — present', detail: 'Founded and grew an international AI-art community to 2,400 members and 10M+ aggregate views; published and maintained open image-model families and community licensing policy.' },
-      { role: 'AI Product Lead', org: 'Indexademics', period: 'Apr 2024 — present', detail: 'Built Arcana and architected Synonance, covering product design, document indexing, RAG retrieval, agentic workflows, deployment, reliability, and infrastructure.' },
-      { role: 'Quantitative Trading & Forecasting Intern', org: 'The Bank of East Asia', period: 'May 2026', detail: 'Led the project group and was named best intern. Built and compared systematic trading and forecasting approaches using Backtrader, ARIMA, XGBoost, LightGBM, GRU, and LSTM.' },
-      { role: 'Technical Team Lead', org: 'Lung Ming Green Energy Technology Engineering Co. Ltd.', period: 'Feb 2026 — May 2026', detail: 'Led a website and information-architecture rebuild and scoped agentic AI platforms for internal operations.' },
-      { role: 'Lead Technical Specialist', org: 'SHSID Sustainable Economics Club', period: 'Oct 2024 — May 2026' },
-      { role: 'Laser Shooting (Rifle) Assistant Coach', org: 'SHSID Stallions', period: 'Feb 2023 — Apr 2025' },
-      { role: 'Outreach Intern', org: 'Third Eye Foundation Nepal', period: 'Jul 2024 — Aug 2024' },
-      { role: 'Student Intern', org: 'Alibaba Cloud', period: 'Jan 2024', detail: 'Designed Fiona, an architecture for real-time AI-generated 3D games and environments, with adaptive generation and two-stage content safety.' },
-      { role: 'Lead Technical Specialist', org: 'SHSID ESL Outreach Group', period: 'Sep 2022 — Jun 2023' },
-      { role: 'Journalist', org: 'SHSID News Team', period: 'Oct 2020 — Jun 2022' },
-    ],
-    focus: ['Artificial intelligence', 'Programming', 'Research', 'Product leadership', 'Community outreach'],
   },
   {
     id: 'gordon-huang', name: 'Gordon Huang', year: '28', avatar: 'GH',
