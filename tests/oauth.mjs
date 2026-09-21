@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import { validateIdentity, provisionIdentity } from '../server/oauth.js';
+process.env.LAUNCHPAD_ADMIN_SUB = 'admin-id'; process.env.LAUNCHPAD_ADMIN_VID = 'CATSAIDS-MEOW';
+const identity = { sub: 'admin-id', vid: 'CATSAIDS-MEOW', name: 'Admin', email: 'admin@example.test' };
+const base = { typ: 'at', sub: identity.sub, aud: 'app_' + crypto.createHash('sha256').update('https://patech.standardcas.org').digest('hex').slice(0,24), exp: Date.now()/1000 + 3600 };
+const token = claims => 'header.' + Buffer.from(JSON.stringify(claims)).toString('base64url') + '.signature';
+const fetcher = async () => ({ ok: true, json: async () => identity });
+assert.equal((await validateIdentity(token(base), fetcher)).identity.vid, identity.vid);
+for (const patch of [{ aud: 'another-app' }, { sub: 'someone-else' }, { typ: 'id' }, { exp: 0 }, { iss: 'https://evil.test' }]) await assert.rejects(validateIdentity(token({...base,...patch}), fetcher));
+await assert.rejects(validateIdentity(token(base), async()=>({ok:false})));
+const data = { users: [{ id:'legacy',email:identity.email,role:'Member' }] };
+assert.equal(provisionIdentity(data, identity).role, 'Admin');
+assert.equal(data.users.length,2,'No automatic email-only linking');
+assert.equal(provisionIdentity(data,{...identity,vid:'DIFFERENT'}).role,'Member');
+assert.equal(provisionIdentity(data,{...identity,sub:'impostor'}).role,'Member');
+assert.equal(data.users.find(u=>u.id==='legacy').role,'Member');
+console.log('OAuth audience, expiry, identity binding, admin mapping and account-linking checks passed');
