@@ -26,3 +26,12 @@ Run `npm run build`, then `STUDIO_SCENARIO=/tmp/studio-scenario.json node tests/
 Production deployed and browser-verified: authenticated admin session survives deployment; overview, project directory, and existing project content load with the new shell. Environment, signing secret, and user database hashes were unchanged by the deployment.
 
 The host supplies a development environment during dependency installation. The build script now explicitly sets `NODE_ENV=production` so a deploy cannot ship the React development runtime. Verify the rebuilt assets, not just source hashes.
+
+## Project and task card redesign
+
+- Project cards show a concise header, correctly pluralized task totals, direct links, and visible add-task controls for admins. Single-task projects open immediately; task titles are never automatically numbered.
+- Task briefs, membership/recruitment status, collaboration shortcuts, and the primary next action have distinct areas. Admin archive/restore/delete controls remain separate from student actions.
+- Completion, archive and restore use confirmations. Non-members cannot complete non-code tasks merely because they are admins; archived/finished tasks do not offer work actions. Existing two-step joining and code review flows remain available.
+- Shared project/task URLs reopen the selected card. Discussion drafts and calendar titles preserve task context, including on refresh; neither shortcut posts or schedules automatically.
+- Card-specific checks: permission matrix and recruitment boundary tests; browser-tested student joining/completion and absence of admin controls; administrator add-task, archive and restore; copy-link round trip; discussion/calendar prefill; 390px mobile layout without horizontal overflow. Mutations used only the synthetic fixture.
+- The PA Tech upload-testing brief currently describes uploads/hours, but its task has no repository. The card explicitly states that it has no code upload and completion does not automatically award hours. The brief itself remains unchanged.

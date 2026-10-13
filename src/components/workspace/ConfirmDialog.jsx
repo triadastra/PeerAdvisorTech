@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Dialog from './Dialog';
 
-export default function ConfirmDialog({ title, description, onConfirm, onClose, label = 'Delete' }) {
+export default function ConfirmDialog({ title, description, onConfirm, onClose, label = 'Delete', danger = true }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const confirm = async () => {
@@ -16,7 +16,7 @@ export default function ConfirmDialog({ title, description, onConfirm, onClose, 
       <h2 id="confirm-action-title">{title}</h2>
       <p>{description}</p>
       {error && <p role="alert">{error}</p>}
-      <div><button data-autofocus className="ws-secondary" disabled={busy} onClick={onClose}>Cancel</button><button className="ws-secondary ws-danger" disabled={busy} onClick={confirm}>{busy ? 'Working…' : label}</button></div>
+      <div><button data-autofocus className="ws-secondary" disabled={busy} onClick={onClose}>Cancel</button><button className={danger ? 'ws-secondary ws-danger' : 'studio-primary'} disabled={busy} onClick={confirm}>{busy ? 'Working…' : label}</button></div>
     </div>
   </Dialog>;
 }

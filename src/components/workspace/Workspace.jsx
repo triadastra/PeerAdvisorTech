@@ -81,7 +81,7 @@ export default function Workspace() {
     window.addEventListener('keydown', keydown); return () => window.removeEventListener('keydown', keydown);
   }, []);
   const notify = useCallback((msg, type = 'ok') => { clearTimeout(toastTimer.current); setToast({ msg, type }); toastTimer.current = setTimeout(() => setToast(null), 6000); }, []);
-  const go = value => { setParams({ view: toolFor(value).id }); setMenuOpen(false); setSearchOpen(false); setQuery(''); window.scrollTo({ top: 0, behavior: 'instant' }); };
+  const go = (value, context = {}) => { setParams({ view: toolFor(value).id, ...Object.fromEntries(['project', 'task'].filter(key => context[key]).map(key => [key, context[key]])) }); setMenuOpen(false); setSearchOpen(false); setQuery(''); window.scrollTo({ top: 0, behavior: 'instant' }); };
   const name = profile?.name || user?.name || user?.email?.split('@')[0] || 'Member';
   const role = profile?.role || user?.role || 'Member';
   const vid = profile?.vid || vidFor(user);

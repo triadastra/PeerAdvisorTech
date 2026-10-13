@@ -26,3 +26,24 @@ try {
   await assert.rejects(listTasks, /connection is unavailable/);
 } finally { globalThis.fetch = originalFetch; }
 console.log('Studio routes, task summaries, recruitment boundary and error propagation passed');
+
+const { taskAccess, plural, studioLink } = await import('../src/components/workspace/taskActions.js');
+const open = {status: 'open', members: []};
+assert.equal(taskAccess(open, 'me', false).canJoin, true);
+assert.equal(taskAccess({...open, members:['me']}, 'me', false).canJoin, false);
+assert.equal(taskAccess({...open, members:['me']}, 'me', false).canComplete, true);
+assert.equal(taskAccess(open, 'me', true).canComplete, false, 'Admin status alone does not grant team completion');
+for (const extra of [{archived_at:1}, {status:'done'}, {pr:'url'}, {status:'review'}, {submission:{}}, {recruiting_ends_at:1000}]) assert.equal(taskAccess({...open,...extra}, 'me', false, 1000).canJoin, false);
+assert.equal(taskAccess({...open, repository:'org/repo'}, 'me', false).canWork, false);
+assert.equal(taskAccess({...open, repository:'org/repo'}, 'me', true).canWork, true);
+assert.equal(taskAccess({...open, repository:'org/repo', members:['me']}, 'me', false).canComplete, false);
+for (const admin of [true,false]) for (const extra of [{archived_at:1},{status:'done'},{pr:'url'}]) {
+ const a=taskAccess({...open, members:['me'],repository:'org/repo',...extra}, 'me', admin);
+ assert.equal(a.canWork, false); assert.equal(a.canComplete, false);
+}
+assert.equal(taskAccess({...open,repository:'org/repo',status:'review'},'me',true).canReview,true);
+assert.equal(taskAccess({...open,repository:'org/repo',status:'review'},'me',false).canReview,false);
+assert.equal(plural(1,'task'),'1 task'); assert.equal(plural(2,'task'),'2 tasks');
+const link=new URL(studioLink('projects','project / 1','task & 2','https://patech.example'));
+assert.equal(link.pathname,'/workspace'); assert.equal(link.searchParams.get('task'),'task & 2'); assert.equal(link.searchParams.get('project'),'project / 1');
+console.log('Project card permissions, closed/archived states and share links passed');

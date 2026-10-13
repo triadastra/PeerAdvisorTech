@@ -44,7 +44,7 @@ export default function TaskFlowModal({ entry, info, busy, error, onJoin, onSync
   const pushed = !!task.head && !!task.base_sha && task.head !== task.base_sha;
   const reviewReady = task.status === 'review' || !!task.submission;
   const recruitingOpen = task.recruiting_ends_at && now < task.recruiting_ends_at;
-  const update = result => setTask(result?.task || result);
+  const update = result => setTask(previous => ({ ...previous, ...(result?.task || result) }));
 
   const join = async () => {
     try { update(await onJoin(task)); setPhase('workspace'); } catch { /* Parent displays the error without losing this task. */ }
@@ -60,7 +60,7 @@ export default function TaskFlowModal({ entry, info, busy, error, onJoin, onSync
       </div>
 
       {phase === 'confirm' ? <div className="px-6 py-6 space-y-5">
-        <div><div className="kicker text-acid-500 mb-2">Step 1 of 2 · join decision</div><h3 className="font-display text-2xl text-ink-50">Are you sure you want to do this project?</h3><p className="mt-2 text-sm text-ink-300 leading-relaxed">You are joining this exact task, not just bookmarking it. The first person to join starts a 24-hour teammate window. Joining an existing team uses the time remaining in that window.</p></div>
+        <div><div className="kicker text-acid-500 mb-2">Step 1 of 2 · join decision</div><h3 className="font-display text-2xl text-ink-50">Join this task?</h3><p className="mt-2 text-sm text-ink-300 leading-relaxed">You are joining this exact task, not just bookmarking it. The first person to join starts a 24-hour teammate window. Joining an existing team uses the time remaining in that window.</p></div>
         <div className="border border-ink-800 bg-ink-950 p-4 space-y-3">
           <Step number="01" title="Find teammates for 24 hours">{task.members?.length ? `${task.members.length} teammate${task.members.length === 1 ? '' : 's'} already on this task.` : 'You will open the teammate window for this task.'}</Step>
           <Step number="02" title={task.repository ? "Work from the Git workspace" : "Follow the task instructions"}>{task.repository ? "Your code is pushed to Launchpad and retained for review." : "Coordinate with your teammates using Discussion and Calendar."}</Step>
@@ -68,18 +68,26 @@ export default function TaskFlowModal({ entry, info, busy, error, onJoin, onSync
         </div>
         {task.repository && <p className="text-xs text-ink-400">GitHub source: <a className="text-acid-500 underline break-all" href={`https://github.com/${task.repository}`} target="_blank" rel="noreferrer">{task.repository}</a> · main</p>}
         {error && <p role="alert" className="text-sm text-[#fb7185]">{error}</p>}
-        <div className="flex gap-3"><button type="button" className="studio-primary" disabled={busy} onClick={join}>{busy ? 'Joining…' : 'Yes — open this project →'}</button><button type="button" className="kicker text-ink-500 hover:text-ink-200" disabled={busy} onClick={onClose}>Not now</button></div>
+        <div className="flex gap-3"><button type="button" className="studio-primary" disabled={busy} onClick={join}>{busy ? 'Joining…' : 'Join task and continue →'}</button><button type="button" className="kicker text-ink-500 hover:text-ink-200" disabled={busy} onClick={onClose}>Not now</button></div>
       </div> : <div className="px-6 py-6 space-y-6">
-        <div><div className="kicker text-acid-500 mb-2">Step 2 of 2 · shared workspace</div><h3 className="font-display text-2xl text-ink-50">Your project handoff</h3><p className="mt-2 text-sm text-ink-300">{task.members?.length > 1 ? `Team: ${task.members.length} members. ` : ''}{recruitingOpen ? `Recruiting closes in ${fmtCountdown(task.recruiting_ends_at)}.` : 'Recruitment is closed; existing members can keep working.'}</p></div>
+        <div><div className="kicker text-acid-500 mb-2">Step 2 of 2 · shared workspace</div><h3 className="font-display text-2xl text-ink-50">Your task workspace</h3><p className="mt-2 text-sm text-ink-300">{task.members?.length > 1 ? `Team: ${task.members.length} members. ` : ''}{recruitingOpen ? `Recruiting closes in ${fmtCountdown(task.recruiting_ends_at)}.` : 'Recruitment is closed; existing members can keep working.'}</p></div>
 
         {task.repository && task.clone_url ? <section className="border border-ink-700 bg-ink-950 p-4 space-y-4">
           <div><div className="kicker text-acid-500 mb-1">Git workspace</div><p className="text-xs text-ink-400">This is the task repo on Launchpad. Clone it, make changes locally, commit, then push to <code className="text-ink-200">main</code>.</p></div>
           <p className="text-xs text-ink-400">GitHub source: <a className="text-acid-500 underline break-all" href={`https://github.com/${task.repository}`} target="_blank" rel="noreferrer">{task.repository}</a> · main</p>
           <CopyRow label="Your Launchpad Git remote" value={task.clone_url} />
           <details><summary className="cursor-pointer text-sm text-ink-200">Clone, push, and send the work back</summary><pre className="mt-3 bg-ink-900 border border-ink-800 p-3 text-xs text-ink-300 overflow-x-auto">{`git -c http.extraHeader="X-Patech-Git: YOUR_CREDENTIAL" clone ${task.clone_url}\ncd ${task.id}\ngit config http.${task.clone_url}.extraHeader "X-Patech-Git: YOUR_CREDENTIAL"\n# edit files, commit, then:\ngit pull --no-rebase origin main\ngit push origin main`}</pre><p className="mt-2 text-xs text-ink-500">Generate your private Git credential in My work. Launchpad records the authenticated push, not just the commit author.</p></details>
-        </section> : <div className="border border-ink-800 bg-ink-950 p-4 text-sm text-ink-400">{task.repository ? 'The code workspace is not ready yet. Close this window, refresh the projects, and try again. Contact your administrator if it stays unavailable.' : 'This is a non-code task. Follow its instructions with your teammates, then choose Mark task complete in My work.'}</div>}
+        </section> : <div className="border border-ink-800 bg-ink-950 p-4 text-sm text-ink-400">{task.repository ? 'The code workspace is not ready yet. Close this window, refresh the projects, and try again. Contact your administrator if it stays unavailable.' : 'This is a non-code task. Follow its instructions with your teammates, then choose Mark complete in My work.'}</div>}
 
         {task.repository && <section className="space-y-3">
+          {task.main_sync?.status === 'conflict' && <details><summary>Resolve the main merge locally</summary><pre className="overflow-x-auto text-xs p-3">{`git pull --no-rebase origin main
+git fetch origin refs/patech/upstream-main
+git merge FETCH_HEAD
+# Resolve conflicts, then:
+git add .
+git commit
+git push origin main`}</pre></details>}
+          {task.main_sync?.status === 'current' && <p className="text-xs">Main checked {new Date(task.main_sync.checked_at).toLocaleString()}</p>}
           <div className="kicker text-ink-500">Handoff status</div>
           <div className="border border-ink-800 p-4 space-y-3">
             <Step number="01" title="Teammate window" complete={!!task.members?.length}>{task.recruiting_ends_at ? (recruitingOpen ? `${fmtCountdown(task.recruiting_ends_at)} left to find teammates.` : 'Recruitment closed; the team is locked.') : 'Starts when the first teammate joins.'}</Step>

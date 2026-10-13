@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import ConfirmDialog from './ConfirmDialog';
 import { useState } from 'react';
 import { projects } from '../../data/projects';
@@ -15,11 +16,17 @@ const keyOfIso = (iso) => keyOf(new Date(iso));
 
 export default function CalendarView({ ctx }) {
   const { user, events, reload, notify } = ctx;
+  const [params] = useSearchParams();
+  const project = ctx.projects.find(p => p.id === params.get('project'));
+  const task = project?.tasks.find(t => t.id === params.get('task'));
+  const contextTitle = task ? `${project.title}: ${task.title}` : '';
+  const backToTask = () => ctx.go('Groups & Tasks', { project: project.id, task: task.id });
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected, setSelected] = useState(keyOf(today));
 
-  const [title, setTitle] = useState('');
+  const [draftTitle, setTitle] = useState(null);
+  const title = draftTitle ?? contextTitle.slice(0, 200);
   const [time, setTime] = useState('10:00');
   const [spec, setSpec] = useState('');
   const [withWhom, setWithWhom] = useState('');
@@ -57,6 +64,7 @@ export default function CalendarView({ ctx }) {
 
   return (
     <div className="grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-10">
+      {task && <div className="pc-context lg:col-span-2"><span>Planning a session for {contextTitle}. Choose a date and time below.</span><button onClick={backToTask}>Back to task</button></div>}
       {/* Month grid */}
       <div>
         <div className="flex items-center justify-between mb-4">

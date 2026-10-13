@@ -146,3 +146,63 @@
 @media(max-width:760px) { .ws-admin-bar { align-items:flex-start; flex-direction:column; }.ws-assignment-catalog { padding:18px; }.ws-task-management { float:none; } }
 
 .ws-project-list>div:first-child { margin-bottom:14px; }.ws-project-list>div:first-child>div button { padding:10px 14px; border-radius:7px; }.ws-project-list>[aria-label="Task status filter"] button { border-radius:6px; }.ws-project-list article header { padding:20px; }.ws-project-list article header h2 { font-size:21px; }
+
+/* Project briefs and task actions: one reading column, one clear next step. */
+.pc-project { border: 1px solid var(--studio-border); border-radius: 18px; background: var(--studio-panel); overflow: hidden; }
+.pc-project-header { display: grid; grid-template-columns: 1fr auto; gap: 18px 24px; padding: 26px; }
+.pc-project-title { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.pc-project-title h2 { font-size: 24px; font-weight: 650; letter-spacing: -.035em; line-height: 1.2; overflow-wrap: anywhere; }
+.pc-project-avatar { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; border-radius: 13px; background: var(--studio-tag-bg); color: var(--studio-tag-text); font-size: 15px; font-weight: 700; }
+.pc-overline, .pc-action-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; color: var(--studio-muted); }
+.pc-project-tools, .pc-project-summary, .pc-task-facts, .pc-task-links, .pc-admin-actions > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.pc-project-description, .pc-project-summary { grid-column: 1 / -1; }
+.pc-project-description { max-width: 72ch; }
+.pc-brief p, .pc-description { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.75; color: var(--studio-muted); margin: 0; }
+.pc-inline { margin-top: 5px; font-size: 13px; text-decoration: underline; text-underline-offset: 4px; color: var(--studio-heading); min-height: 36px; }
+.pc-project-summary { gap: 12px 20px; font-size: 12px; color: var(--studio-muted); }
+.pc-project-summary span, .pc-project-summary a, .pc-project-summary button, .pc-task-facts span, .pc-task-kicker > span, .pc-repository { display: inline-flex; align-items: center; gap: 6px; }
+.pc-project-summary button { color: var(--studio-heading); min-height: 36px; text-decoration: underline; text-underline-offset: 4px; }
+.pc-primary, .pc-secondary, .pc-icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 9px; padding: 10px 13px; min-height: 42px; font-size: 13px; font-weight: 600; line-height: 1.35; transition: background .15s, border-color .15s; }
+.pc-primary { background: var(--studio-heading); color: var(--studio-bg); border: 1px solid var(--studio-heading); }
+.pc-primary:hover { opacity: .85; }
+.pc-secondary, .pc-icon-button { border: 1px solid var(--studio-border); color: var(--studio-text); background: transparent; }
+.pc-secondary:hover, .pc-icon-button:hover { background: var(--studio-tag-bg); border-color: var(--studio-btn-border); }
+.pc-icon-button { width: 42px; padding: 10px; }
+.pc-task-list { margin: 0; padding: 0; list-style: none; }
+.pc-task { display: grid; grid-template-columns: minmax(0,1fr) 225px; gap: 22px; border-top: 1px solid var(--studio-border); padding: 26px; background: color-mix(in srgb, var(--studio-bg) 42%, var(--studio-panel)); }
+.pc-task-body { min-width: 0; }
+.pc-task-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; font-size: 11px; color: var(--studio-muted); margin-bottom: 12px; }
+.pc-task h3 { font-size: 19px; line-height: 1.5; font-weight: 600; letter-spacing: -.015em; color: var(--studio-heading); margin-bottom: 12px; overflow-wrap: anywhere; }
+.pc-status { border: 1px solid var(--studio-border); border-radius: 30px; padding: 4px 9px; color: var(--studio-text); }
+.pc-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--studio-muted); }
+.pc-status.is-active i, .pc-status.is-done i { background: #62995a; }
+.pc-status.is-review i { background: #b79d5c; }
+.pc-task-facts { margin-top: 18px; font-size: 11px; color: var(--studio-muted); gap: 8px 15px; }
+.pc-task-facts .pc-joined { color: var(--studio-text); }
+.pc-repository { font-size: 12px; color: var(--studio-muted); margin-top: 12px; overflow-wrap: anywhere; }
+.pc-task-links { gap: 4px 16px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--studio-border); }
+.pc-task-links button, .pc-admin-actions button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; font-size: 12px; color: var(--studio-text); }
+.pc-task-links button:hover, .pc-admin-actions button:hover { text-decoration: underline; text-underline-offset: 4px; }
+.pc-task-action { align-self: start; display: flex; flex-direction: column; align-items: stretch; gap: 12px; border: 1px solid var(--studio-border); border-radius: 12px; padding: 18px; background: var(--studio-panel); min-width: 0; }
+.pc-task-action p { font-size: 13px; line-height: 1.65; color: var(--studio-text); margin: 0; }
+.pc-task-action small { font-size: 11px; line-height: 1.6; color: var(--studio-muted); }
+.pc-task-action .pc-primary { justify-content: space-between; }
+.pc-task-action svg { flex-shrink: 0; }
+.pc-success { color: var(--studio-acid); }
+.pc-admin-actions { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px dashed var(--studio-border); padding-top: 10px; color: var(--studio-muted); font-size: 11px; }
+.pc-admin-actions > div { gap: 18px; }
+.pc-admin-actions .pc-delete { color: #e59194; }
+:root[data-theme='light'] .pc-admin-actions .pc-delete { color: #a33139; }
+.pc-empty-project { display: flex; align-items: center; gap: 10px; padding: 22px 26px; border-top: 1px solid var(--studio-border); color: var(--studio-muted); font-size: 13px; }
+.pc-context { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--studio-border); background: var(--studio-tag-bg); padding: 14px 18px; border-radius: 10px; font-size: 13px; overflow-wrap: anywhere; }
+.pc-context button { text-decoration: underline; min-height: 36px; flex-shrink: 0; }
+.pc-task-form { padding: 26px; display: grid; gap: 18px; }
+.pc-task-form h2 { font-size: 24px; font-weight: 650; }
+.pc-task-form label { display: grid; gap: 8px; font-size: 13px; }
+.pc-task-form p { color: var(--studio-muted); font-size: 13px; line-height: 1.7; }
+.pc-task-form > div { display: flex; justify-content: flex-end; gap: 10px; }
+.pc-warning { margin-top: 12px; font-size: 12px; color: var(--studio-text); border-left: 3px solid #b79d5c; padding-left: 10px; }
+.project-board button:disabled { opacity: .45; cursor: not-allowed; }
+.project-board :is(button,a):focus-visible { outline: 2px solid var(--studio-acid); outline-offset: 4px; }
+@media (max-width: 900px) { .pc-project-header { grid-template-columns: 1fr; } .pc-task { grid-template-columns: minmax(0,1fr); } .pc-task-action { max-width: none; } }
+@media (max-width: 600px) { .pc-project-header, .pc-task { padding: 20px; gap: 18px; } .pc-project-tools { gap: 6px; } .pc-project-tools .pc-secondary { flex: 1; } .pc-task h3 { font-size: 17px; } .pc-admin-actions { align-items: flex-start; flex-direction: column; } .pc-task-links { column-gap: 12px; } .pc-task-links button, .pc-admin-actions button { min-height: 44px; } }

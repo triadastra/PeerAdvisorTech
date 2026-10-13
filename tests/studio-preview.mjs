@@ -11,6 +11,7 @@ const member = { id: 'preview-member', name: 'Alex Chen', email: 'alex@example.t
 const account = () => ({ ...member, role: scenario().admin ? 'Admin' : 'Member' });
 const task = (id, title, extra = {}) => ({ id, title, description: 'Read the brief, share an update with your team, and check the result before finishing.', status: 'open', members: [], ...extra });
 const projects = [{ id: 'p1', title: 'A better school day', description: 'Small tools that make life on campus easier. Choose a task that fits your interests.', tasks: [task('t1', 'Map the student help journey', { members: [member.id], recruiting_ends_at: Date.now() + 3600000 }), task('t2', 'Design the club directory'), task('t3', 'Improve the search experience', { repository: 'example/school-directory', clone_url: 'https://example.test/git/t3', members: [member.id], base_sha: '1234567890', head: 'abcdef1234', recruiting_ends_at: Date.now() - 1000 })] }, { id: 'p2', title: 'Open campus', description: 'Help new students find their way.', tasks: [task('t4', 'Write an accessible welcome guide', { members: [member.id], status: 'review', repository: 'example/campus', submission: {} }), task('t5', 'Review map labels', { status: 'done', members: [member.id] })] }];
+projects.unshift({id:'pa',title:'PA Tech',description:'PA Tech is the student-led service-learning group supporting school AI infrastructure.',tasks:[task('testing','[Testing] Upload for Getting Hours! 1 HOUR FOR TESTING THIS UPLOAD FUNCTION',{description:'This is a test field. It is not bound to any project. You can try submitting something here to help debug our Git system. You will receive 1 hour by default! (regardless of what code you posted).',members:[member.id],recruiting_ends_at:Date.now()-1000})]});
 let events = [], tasks = [], forum = [];
 app.get('/dashboard-api/oauth/sdk.js', (_req, res) => res.type('js').send('window.LaunchpadAuth={ready:async()=>({}),signOut(){},state:{}}'));
 app.get('/api/auth/config', (_req, res) => res.json({ oauth: true }));
@@ -23,9 +24,12 @@ app.post('/api/project-service/tasks/:id/:action', (req, res) => {
   if (scenario().joinError) return res.status(409).json({ error: 'Recruitment has closed. Choose another task.' });
   if (req.params.action === 'join') { t.members.push(member.id); t.recruiting_ends_at ||= Date.now() + 86400000; }
   if (req.params.action === 'submit') { t.status = 'review'; t.submission = {}; }
+  if (req.params.action === 'archive') t.archived_at = Date.now();
+  if (req.params.action === 'restore') t.archived_at = null;
   if (req.params.action === 'complete') t.status = 'done';
   res.json({ task: t });
 });
+app.post('/api/project-service/projects/:id/tasks', (req,res) => { if(!scenario().admin) return res.sendStatus(403); const t=task(String(Date.now()),req.body.title,{description:req.body.description}); projects.find(p=>p.id===req.params.id).tasks.push(t);res.json(t); });
 app.get('/api/profiles', (_req, res) => res.json([account()]));
 app.get('/api/tracks', (_req, res) => res.json([]));
 app.get('/api/assignments', (_req, res) => res.json([]));
