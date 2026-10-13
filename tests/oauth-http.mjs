@@ -45,8 +45,8 @@ try {
       if (match) { clearTimeout(timeout); resolveBase(`http://127.0.0.1:${match[1]}`); }
     });
   });
-  async function call(path, body, cookie) {
-    return fetch(base + '/api' + path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Origin: origin, ...(cookie ? { Cookie: cookie } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
+  async function call(path, body, cookie, ip = '203.0.113.20') {
+    return fetch(base + '/api' + path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Origin: origin, 'X-Forwarded-For': ip, ...(cookie ? { Cookie: cookie } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
   }
   assert.deepEqual(await (await call('/auth/config')).json(), { oauth: true });
   assert.equal((await call('/auth/login', {})).status, 403);
@@ -64,6 +64,10 @@ try {
   assert.deepEqual((await (await call('/auth/me', undefined, cookie.split(';')[0])).json()).user, user);
   assert.equal((await call('/auth/logout', {}, cookie.split(';')[0])).status, 200);
   assert.deepEqual(await (await call('/auth/me')).json(), { user: null });
+  for (let i = 21; i <= 26; i++) {
+    assert.equal((await call('/auth/launchpad', { accessToken: 'invalid' }, undefined, `203.0.113.${i}`)).status, 401, 'Different visitors must not share one login rate limit');
+  }
+  assert.ok(!output.includes('ERR_ERL_UNEXPECTED_X_FORWARDED_FOR'));
   console.log('Production OAuth default, password blocking, token rejection, session refresh and logout passed');
 } finally {
   if (child && child.exitCode === null) { const exited = once(child, 'exit'); child.kill(); await exited; }
