@@ -47,6 +47,9 @@ const SECURE = process.env.NODE_ENV === 'production' && process.env.HTTPS === 't
 
 const app = express();
 app.disable('x-powered-by');
+// Launchpad's authenticated ingress connects to the app over loopback. Trust
+// only that local proxy so login limits use the visitor IP, not one shared IP.
+app.set('trust proxy', 'loopback');
 
 // Gzip/deflate for JSON + static assets (hashed bundles shrink ~70%).
 app.use(compression());
@@ -613,7 +616,7 @@ app.use((err, _req, res, _next) => {
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`PATD workspace API → http://localhost:${PORT}`);
+  console.log(`PATD workspace API → http://localhost:${server.address().port}`);
 });
 
 server.on('error', (err) => {
