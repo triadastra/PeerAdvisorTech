@@ -62,6 +62,15 @@ try {
   assert.match(cookie, /Secure/i);
   assert.match(cookie, /SameSite=Lax/i);
   assert.deepEqual((await (await call('/auth/me', undefined, cookie.split(';')[0])).json()).user, user);
+  const memberCookie = cookie.split(';')[0];
+  assert.equal((await call('/tasks', { title: 'Members cannot publish' }, memberCookie)).status, 403);
+  const eventResponse = await call('/events', { title: 'Test session', starts_at: '2026-10-14T02:00:00Z' }, memberCookie);
+  assert.equal(eventResponse.status, 201);
+  const event = await eventResponse.json();
+  assert.ok((await (await call('/events', undefined, memberCookie)).json()).some(e => e.id === event.id));
+  const postResponse = await call('/forum', { body: 'Isolated workflow test' }, memberCookie);
+  assert.equal(postResponse.status, 201);
+  assert.ok((await (await call('/forum', undefined, memberCookie)).json()).some(p => p.body === 'Isolated workflow test'));
   assert.equal((await call('/auth/logout', {}, cookie.split(';')[0])).status, 200);
   assert.deepEqual(await (await call('/auth/me')).json(), { user: null });
   for (let i = 21; i <= 26; i++) {

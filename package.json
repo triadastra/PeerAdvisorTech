@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "test:oauth": "node tests/oauth.mjs && node tests/oauth-http.mjs",
     "preview": "vite preview",
-    "prestart": "test -f dist/index.html || npm run build"
+    "prestart": "test -f dist/index.html || npm run build",
+    "test:studio": "node tests/studio.mjs"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { fmtCountdown } from './util';
 import TaskFlowModal from './TaskFlowModal';
+import Dialog from './Dialog';
 const field = 'w-full bg-ink-950 border border-ink-700 px-3 py-2 text-sm text-ink-100';
 const button = 'border border-ink-600 px-4 py-2 text-sm disabled:opacity-40';
 const newStep = () => ({ key: crypto.randomUUID(), title: '', description: '' });
@@ -14,13 +15,14 @@ export default function Projects({ ctx, mine = false }) {
   const [repos, setRepos] = useState([]), [repository, setRepository] = useState('');
   const [device, setDevice] = useState(null), [credential, setCredential] = useState(''), [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [addingTo, setAddingTo] = useState(null), [taskTitle, setTaskTitle] = useState(''), [taskInstructions, setTaskInstructions] = useState('');
   const [showArchived, setShowArchived] = useState(false), [deleting, setDeleting] = useState(null);
   const [taskFlow, setTaskFlow] = useState(null), [flowBusy, setFlowBusy] = useState(false), [flowError, setFlowError] = useState('');
   const [now, tick] = useState(Date.now);
   useEffect(() => { const timer = setInterval(() => tick(Date.now()), 1000); return () => clearInterval(timer); }, []);
   const act = async fn => { setBusy(true); setError(''); try { await fn(); } catch (e) { setError(e.message); } finally { setBusy(false); } };
-  const openTaskFlow = task => { setFlowError(''); setTaskFlow({ task, joined: joined(task) }); };
+  const openTaskFlow = task => { setFlowError(''); setTaskFlow({ task, joined: joined(task) || info?.admin && task.members.length > 0 }); };
   const flowAction = async (fn, message) => {
     setFlowBusy(true); setFlowError('');
     try { const result = await fn(); await load(); if (message) ctx.notify(message); return result; }
@@ -31,13 +33,12 @@ export default function Projects({ ctx, mine = false }) {
   const updateStep = (key, patch) => setSteps(old => old.map(n => n.key === key ? { ...n, ...patch } : n));
   const moveStep = (i, delta) => setSteps(old => { const rows = [...old]; [rows[i], rows[i + delta]] = [rows[i + delta], rows[i]]; return rows; });
   const joined = t => t.members.includes(info?.user_id);
-  const visible = projects.map(p => ({ ...p, tasks: p.tasks.filter(t => showArchived || !t.archived_at) })).filter(p => (!mine || p.tasks.some(joined)) && `${p.title} ${p.description} ${p.tasks.map(t => t.title).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
-  return <section className="space-y-6">
+  const visible = projects.map(p => ({ ...p, tasks: p.tasks.filter(t => (showArchived || !t.archived_at) && (!mine || joined(t)) && (statusFilter === 'all' || (statusFilter === 'review' ? t.status === 'review' || !!t.submission : statusFilter === 'done' ? t.status === 'done' || !!t.pr : t.status !== 'done' && !t.pr && !t.archived_at))) })).filter(p => (statusFilter === 'all' || p.tasks.length > 0) && (!mine || p.tasks.some(joined)) && `${p.title} ${p.description} ${p.tasks.map(t => t.title).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
+  return <section className="ws-project-list space-y-6">
     <div className="flex flex-wrap justify-between items-center gap-3">
-      <h1 className="font-display text-3xl md:text-4xl font-semibold text-ink-50">{mine ? 'My builds' : 'Explore projects'}</h1>
+      <span className="text-sm text-ink-400">{visible.length} {mine ? 'joined projects' : 'projects'}</span>
       <div className="flex gap-2"><button className={button} disabled={busy} onClick={() => act(load)}>Refresh</button>{info?.admin && !mine && <button className="studio-primary" onClick={() => setCreating(v => !v)}>{creating ? 'Close project form' : 'New project'}</button>}</div>
     </div>
-    <p className="text-ink-300">{mine ? 'Your projects and the tasks you’ve joined. Keep building with your teammates after recruitment closes.' : 'Projects are a series of tasks published by admins. Start a task to open its 24-hour window for finding teammates.'}</p>
     {(error || ctx.projectError) && <p role="alert" className="text-[#fb7185]">{error || ctx.projectError}</p>}
     {creating && info?.admin && !mine && <section className="border border-ink-700 p-5 space-y-4">
       <h2 className="text-xl text-ink-100">Create a project</h2>
@@ -67,17 +68,18 @@ export default function Projects({ ctx, mine = false }) {
         <button disabled={busy || !title.trim() || steps.some(n => !n.title.trim())} className="studio-primary">{busy ? 'Publishing…' : 'Publish project and tasks'}</button>
       </form>
     </section>}
-    {info?.admin && <a className="text-sm underline" target="_blank" rel="noreferrer" href={info.review_url}>Review project submissions in Launchpad ↗</a>}
+    {info?.admin && <div className="ws-admin-bar"><div><strong>Administrator tools</strong><p>Publish project briefs here. Review submitted code in Launchpad.</p></div><a className="ws-secondary" target="_blank" rel="noreferrer" href={info.review_url}>Review submissions ↗</a></div>}
     {projects.some(p => p.tasks.some(t => t.archived_at)) && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} />Show archived tasks</label>}
-    {deleting && <div role="alertdialog" aria-labelledby="delete-task-title" aria-describedby="delete-task-description" className="border border-[#fb7185] bg-ink-950 p-5 space-y-3">
+    {deleting && <Dialog titleId="delete-task-title" busy={busy} onClose={() => setDeleting(null)} className="p-5 space-y-3">
       <h2 id="delete-task-title" className="text-lg">Delete “{deleting.title}”?</h2>
       <p id="delete-task-description" className="text-sm text-ink-300">This removes the task from its project and closes access to its shared code. Existing GitHub branches and pull requests stay unchanged. Archive instead if you want to restore the task later.</p>
-      <div className="flex gap-3"><button className={button} disabled={busy} onClick={() => setDeleting(null)}>Cancel</button><button className={button + ' text-[#fb7185]'} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${deleting.id}/delete`, { confirm_title: deleting.title }); setDeleting(null); await load(); ctx.notify('Task deleted'); })}>Delete task</button></div>
-    </div>}
+      {error && <p role="alert" className="text-[#fb7185]">{error}</p>}<div className="flex gap-3"><button className={button} disabled={busy} onClick={() => setDeleting(null)}>Cancel</button><button className={button + ' text-[#fb7185]'} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${deleting.id}/delete`, { confirm_title: deleting.title }); setDeleting(null); await load(); ctx.notify('Task deleted'); })}>Delete task</button></div>
+    </Dialog>}
+    <div className="flex flex-wrap gap-2" aria-label="Task status filter">{[['all', 'All tasks'], ['active', 'Active'], ['review', 'In review'], ['done', 'Completed']].map(([value, label]) => <button key={value} className={button} aria-pressed={statusFilter === value} onClick={() => setStatusFilter(value)}>{label}</button>)}</div>
     {projects.length > 0 && <input className={field} aria-label="Search projects and tasks" placeholder="Search projects and tasks" value={query} onChange={e => setQuery(e.target.value)} />}
-    {ctx.projectsLoading ? <p>Loading projects…</p> : !ctx.projectError && !visible.length && <p className="text-ink-400">{query ? 'No matching projects.' : mine ? 'No tasks joined yet. Pick a task in Explore projects to get started.' : 'No projects published here yet.'}</p>}
+    {ctx.projectsLoading ? <p>Loading projects…</p> : !ctx.projectError && !visible.length && <p className="text-ink-400">{query || statusFilter !== 'all' ? 'No tasks match these filters.' : mine ? 'No tasks joined yet. Pick a task in Explore projects to get started.' : 'No projects published here yet.'}</p>}
     {mine && !visible.length && <button className={button} onClick={() => ctx.go('Groups & Tasks')}>Explore projects →</button>}
-    {visible.some(p => p.tasks.some(t => joined(t) && !t.archived_at && t.clone_url)) && <div className="border border-ink-800 p-4 space-y-2"><button className={button} disabled={busy} onClick={() => act(async () => { const r = await api.projectService('/credentials', {}); setCredential(r.token); })}>Generate my Git credential</button><p className="text-xs text-ink-400">Valid for 7 days. Replacing it revokes your previous credential.</p>{credential && <div><p>Copy your credential now. Keep it private.</p><code className="select-all break-all">{credential}</code><button className={button} onClick={() => setCredential('')}>Hide</button></div>}</div>}
+    {mine && visible.some(p => p.tasks.some(t => joined(t) && !t.archived_at && t.clone_url)) && <div className="border border-ink-800 p-4 space-y-2"><button className={button} disabled={busy} onClick={() => act(async () => { const r = await api.projectService('/credentials', {}); setCredential(r.token); })}>Generate my Git credential</button><p className="text-xs text-ink-400">Valid for 7 days. Replacing it revokes your previous credential.</p>{credential && <div><p>Copy your credential now. Keep it private.</p><code className="select-all break-all">{credential}</code><button className={button} onClick={() => setCredential('')}>Hide</button></div>}</div>}
     {visible.map(p => <article key={p.id} className="border border-ink-700">
       <header className="p-5 border-b border-ink-800"><h2 className="font-display text-2xl text-ink-50">{p.title}</h2><p className="text-sm text-ink-300 whitespace-pre-wrap mt-2">{p.description}</p><p className="text-xs text-ink-500 mt-2">{p.tasks.length} tasks{p.repository ? ` · ${p.repository} · main` : ''}</p>{info?.admin && <button className={button + ' mt-3'} disabled={busy} onClick={() => { setAddingTo(p.id); setTaskTitle(''); setTaskInstructions(''); }}>Add task</button>}</header>
       {info?.admin && addingTo === p.id && <form className="p-5 border-b border-ink-800 space-y-3" onSubmit={e => { e.preventDefault(); act(async () => {
@@ -91,19 +93,19 @@ export default function Projects({ ctx, mine = false }) {
         <div className="flex gap-3"><button className="studio-primary" disabled={busy || !taskTitle.trim()}>{busy ? 'Adding…' : 'Publish task'}</button><button type="button" className={button} disabled={busy} onClick={() => setAddingTo(null)}>Cancel</button></div>
       </form>}
       {!p.tasks.length && <p className="p-5 text-sm text-ink-400">No active tasks in this project.</p>}
-      <ol className="divide-y divide-ink-800">{p.tasks.map((t, i) => {
+      <details className="ws-project-tasks" open={mine || !!query || statusFilter !== 'all'}><summary>{p.tasks.length ? `View ${p.tasks.length} task${p.tasks.length === 1 ? '' : 's'}` : 'No active tasks'}</summary><ol className="divide-y divide-ink-800">{p.tasks.map((t, i) => {
         const isJoined = joined(t), closed = !!t.recruiting_ends_at && now >= t.recruiting_ends_at;
         const archived = !!t.archived_at;
         const finished = t.status === 'done' || !!t.pr, canJoin = !archived && t.status === 'open' && !closed && !finished;
         return <li key={t.id} className="p-5 space-y-3">
           <div className="flex justify-between flex-wrap gap-2"><h3 className="text-lg text-ink-100">{i + 1}. {t.title}</h3><span className="text-xs text-acid-500">{archived ? 'Archived' : finished ? t.pr ? 'PR opened' : 'Completed' : t.status === 'review' ? 'Awaiting admin review' : !t.recruiting_ends_at ? 'Ready to start' : closed ? 'In progress · recruitment closed' : `${fmtCountdown(t.recruiting_ends_at)} to find teammates`}</span></div>
           <p className="text-sm text-ink-400 whitespace-pre-wrap">{t.description}</p>
-          <p className="text-xs text-ink-500">{t.members.length} teammate{t.members.length === 1 ? '' : 's'}{isJoined ? ' · You joined this task' : ''}</p>
-          {info?.admin && <div className="flex flex-wrap gap-2"><button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/${archived ? 'restore' : 'archive'}`, {}); await load(); ctx.notify(archived ? 'Task restored' : 'Task archived'); })}>{archived ? 'Restore task' : 'Archive task'}</button><button className={button + ' text-[#fb7185]'} disabled={busy} onClick={() => setDeleting(t)}>Delete…</button></div>}
+          <p className="text-xs text-ink-500">{t.repository ? 'Code task · ' : 'Non-code task · '}{t.members.length} teammate{t.members.length === 1 ? '' : 's'}{isJoined ? ' · You joined this task' : ''}</p>
+          {info?.admin && <details className="ws-task-management"><summary>Manage task</summary><div className="flex flex-wrap gap-2"><button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/${archived ? 'restore' : 'archive'}`, {}); await load(); ctx.notify(archived ? 'Task restored' : 'Task archived'); })}>{archived ? 'Restore task' : 'Archive task'}</button><button className={button + ' text-[#fb7185]'} disabled={busy} onClick={() => { setError(''); setDeleting(t); }}>Delete…</button></div></details>}
           {!isJoined && !archived && <button className={button} disabled={busy || !canJoin} onClick={() => openTaskFlow(t)}>{!canJoin ? 'Joining closed' : t.members.length ? 'Join task' : 'Start this task'}</button>}
           {(isJoined || info?.admin) && !archived && !finished && t.repository && <div className="space-y-2">
             <button className={button} disabled={busy} onClick={() => openTaskFlow(t)}>Open Git workspace</button>
-            <p className="text-xs text-ink-400">Receive authenticated pushes, check the base-to-head diff, then send the reviewed commit to GitHub as a PR.</p>
+            <p className="text-xs text-ink-400">Push your changes, check their status, and submit them for an admin to review before a GitHub pull request.</p>
             {t.main_sync?.status === 'current' && <p className="text-xs text-ink-400">Main checked {new Date(t.main_sync.checked_at).toLocaleString()}</p>}
             {['conflict', 'error'].includes(t.main_sync?.status) && <p role="alert" className="text-sm text-[#fb7185]">{t.main_sync.message}</p>}
             {t.main_sync?.status === 'conflict' && <details><summary className="cursor-pointer text-sm">Resolve the main merge locally</summary><pre className="bg-ink-950 p-3 text-xs overflow-x-auto">{`git pull --no-rebase origin main
@@ -114,19 +116,19 @@ git add .
 git commit
 git push origin main`}</pre></details>}
           </div>}
-          {isJoined && !archived && !finished && (t.repository ? <button className={button} disabled={busy} onClick={() => openTaskFlow(t)}>Receive pushes and submit →</button> : <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/complete`, {}); await load(); ctx.notify('Task completed'); })}>Mark task complete</button>)}
+          {isJoined && !archived && !finished && !t.repository && <button className={button} disabled={busy} onClick={() => act(async () => { await api.projectService(`/tasks/${t.id}/complete`, {}); await load(); ctx.notify('Task completed'); })}>Mark task complete</button>}
           {t.pr && <a className={button} href={t.pr} target="_blank" rel="noreferrer">Open GitHub PR ↗</a>}
           {isJoined && !archived && t.clone_url && <details><summary className="text-sm cursor-pointer">Clone, pull and push this task</summary><p className="text-xs text-ink-400 py-2">Replace YOUR_CREDENTIAL with your generated Git credential, then run these commands in a terminal.</p><pre className="bg-ink-950 p-3 text-xs text-ink-300 overflow-x-auto">{`git -c http.extraHeader="X-Patech-Git: YOUR_CREDENTIAL" clone ${t.clone_url}\ncd ${t.id}\ngit config http.${t.clone_url}.extraHeader "X-Patech-Git: YOUR_CREDENTIAL"\ngit pull --no-rebase origin main\n# Edit files, then:\ngit add .\ngit commit -m "Improve task"\ngit pull --no-rebase origin main\ngit push origin main`}</pre></details>}
         </li>;
-      })}</ol>
+      })}</ol></details>
     </article>)}
     {taskFlow && <TaskFlowModal
       entry={taskFlow}
       info={info}
       busy={flowBusy}
       error={flowError}
-      onClose={() => setTaskFlow(null)}
-      onJoin={task => flowAction(() => api.projectService(`/tasks/${task.id}/join`, {}), 'Task added to My builds')}
+      onClose={() => { if (!flowBusy) setTaskFlow(null); }}
+      onJoin={task => flowAction(() => api.projectService(`/tasks/${task.id}/join`, {}), 'Task added to My work')}
       onSync={task => flowAction(() => api.projectService(`/tasks/${task.id}/sync`, {}), 'Launchpad checked for pushed work')}
       onSubmit={task => flowAction(() => api.projectService(`/tasks/${task.id}/submit`, {}), 'Submitted for admin diff review')}
     />}
