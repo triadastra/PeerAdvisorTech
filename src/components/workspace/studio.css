@@ -206,3 +206,11 @@
 .project-board :is(button,a):focus-visible { outline: 2px solid var(--studio-acid); outline-offset: 4px; }
 @media (max-width: 900px) { .pc-project-header { grid-template-columns: 1fr; } .pc-task { grid-template-columns: minmax(0,1fr); } .pc-task-action { max-width: none; } }
 @media (max-width: 600px) { .pc-project-header, .pc-task { padding: 20px; gap: 18px; } .pc-project-tools { gap: 6px; } .pc-project-tools .pc-secondary { flex: 1; } .pc-task h3 { font-size: 17px; } .pc-admin-actions { align-items: flex-start; flex-direction: column; } .pc-task-links { column-gap: 12px; } .pc-task-links button, .pc-admin-actions button { min-height: 44px; } }
+
+.ws-view-bar { display:flex; align-items:center; flex-wrap:wrap; gap:12px 18px; margin:0 0 26px; }
+.ws-view-toggle { display:inline-flex; padding:4px; gap:4px; border:1px solid var(--studio-border); background:var(--studio-panel); border-radius:12px; }
+.ws-view-toggle button { min-height:40px; padding:9px 16px; border-radius:8px; color:var(--studio-muted); font-size:13px; font-weight:600; }
+.ws-view-toggle button[aria-pressed=true] { color:var(--studio-bg); background:var(--studio-heading); }
+.ws-view-toggle button:focus-visible { outline:2px solid var(--studio-acid); outline-offset:3px; }
+.ws-view-bar p { color:var(--studio-muted); font-size:12px; line-height:1.6; }
+@media(max-width:600px) { .ws-view-toggle { width:100%; } .ws-view-toggle button { flex:1; min-height:44px; } .ws-view-bar { gap:8px; } }

@@ -35,3 +35,9 @@ The host supplies a development environment during dependency installation. The 
 - Shared project/task URLs reopen the selected card. Discussion drafts and calendar titles preserve task context, including on refresh; neither shortcut posts or schedules automatically.
 - Card-specific checks: permission matrix and recruitment boundary tests; browser-tested student joining/completion and absence of admin controls; administrator add-task, archive and restore; copy-link round trip; discussion/calendar prefill; 390px mobile layout without horizontal overflow. Mutations used only the synthetic fixture.
 - The PA Tech upload-testing brief currently describes uploads/hours, but its task has no repository. The card explicitly states that it has no code upload and completion does not automatically award hours. The brief itself remains unchanged.
+
+## Admin / Student view
+
+Administrators can switch views above the active studio section. Student view hides admin project, planner, guide, overview and contribution-review controls while keeping the same identity and memberships. It does not impersonate another student or change server permissions. The choice is saved per account on this browser; members cannot enable admin UI through a saved preference. Switching modes remounts the section so previously opened admin forms cannot remain visible.
+
+Verified: presentation-policy tests, build and lint; browser switching in Projects and Task planner, persistence through navigation and refresh, restoration of admin tools, and the 390px mobile toggle without overflow.

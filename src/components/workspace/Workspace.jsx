@@ -18,6 +18,7 @@ import WorkOnItModal from './WorkOnItModal';
 import ThemeToggle from '../ThemeToggle';
 import Dialog from './Dialog';
 import { tools, toolFor, myProjectTasks } from './navigation';
+import { workspaceView } from './viewMode';
 
 const icons = [Home, Hammer, FolderKanban, ListTodo, CalendarDays, ChartNoAxesCombined, MessagesSquare, BookOpen];
 const sections = { Studio, Contributions, Timeline: MyTimeline, 'Groups & Tasks': Groups, 'Tasks & plans': Tasks, Forum, Calendar, Guide };
@@ -27,6 +28,11 @@ const required = { Studio: ['tracks', 'assignments'], Timeline: ['tracks', 'assi
 export default function Workspace() {
   const { user, profile, signOut, oauth } = useAuth();
   const [params, setParams] = useSearchParams();
+  const [viewPreference, setViewPreference] = useState(() => {
+    let mode = 'admin';
+    try { mode = localStorage.getItem(`patd:studio-view:${user?.id}`) || mode; } catch { /* Storage is optional. */ }
+    return { userId: user?.id, mode };
+  });
   const tool = toolFor(params.get('view'));
   const tab = tool.key;
   const [data, setData] = useState({ tracks: [], assignments: [], forum: [], tasks: [], profiles: [], events: [] });
@@ -83,7 +89,14 @@ export default function Workspace() {
   const notify = useCallback((msg, type = 'ok') => { clearTimeout(toastTimer.current); setToast({ msg, type }); toastTimer.current = setTimeout(() => setToast(null), 6000); }, []);
   const go = (value, context = {}) => { setParams({ view: toolFor(value).id, ...Object.fromEntries(['project', 'task'].filter(key => context[key]).map(key => [key, context[key]])) }); setMenuOpen(false); setSearchOpen(false); setQuery(''); window.scrollTo({ top: 0, behavior: 'instant' }); };
   const name = profile?.name || user?.name || user?.email?.split('@')[0] || 'Member';
-  const role = profile?.role || user?.role || 'Member';
+  const accountRole = profile?.role || user?.role || 'Member';
+  const { canSwitchView, studentView, role, projectInfo: visibleProjectInfo } = workspaceView(accountRole, projectInfo, viewPreference.userId === user?.id ? viewPreference.mode : 'admin');
+  const switchView = mode => {
+    if (!canSwitchView) return;
+    setViewPreference({ userId: user?.id, mode });
+    try { localStorage.setItem(`patd:studio-view:${user?.id}`, mode); } catch { /* The toggle still works without persistence. */ }
+    setModal(null);
+  };
   const vid = profile?.vid || vidFor(user);
   const myAssignments = data.assignments.filter(a => a.member_ids?.includes(user?.id));
   const joined = myProjectTasks(projects, projectInfo?.user_id);
@@ -93,7 +106,7 @@ export default function Workspace() {
     try { const assignment = await createAssignment({ node_id: modal.node.id }); await reload(); setModal(m => m && ({ ...m, busy: false, phase: 'done', assignment })); }
     catch (error) { setModal(m => m && ({ ...m, busy: false })); notify(error.message, 'err'); }
   };
-  const ctx = { user, name, role, vid, oauth, projects, projectInfo, projectError, projectsLoading, reloadProjects, ...data, myAssignments, specFilter, setSpecFilter, loading, reload, notify, go, tab, openWorkOn: (track, node) => setModal({ track, node, phase: 'confirm' }), setForum: forum => setData(d => ({ ...d, forum })) };
+  const ctx = { user: studentView ? { ...user, role } : user, name, role, vid, oauth, studentView, projects, projectInfo: visibleProjectInfo, projectError, projectsLoading, reloadProjects, ...data, myAssignments, specFilter, setSpecFilter, loading, reload, notify, go, tab, openWorkOn: (track, node) => setModal({ track, node, phase: 'confirm' }), setForum: forum => setData(d => ({ ...d, forum })) };
   const Section = sections[tab];
   const failures = required[tab].filter(key => errors[key]);
   const searchResults = tools.filter(t => `${t.label} ${t.description}`.toLowerCase().includes(query.toLowerCase().trim()));
@@ -106,11 +119,18 @@ export default function Workspace() {
       <aside className={`ws-sidebar ${menuOpen ? 'is-open' : ''}`} id="studio-navigation">
         <p className="ws-eyebrow ws-sidebar-label">YOUR WORKSPACE</p>
         <nav aria-label="Studio tools">{['Workspace', 'Organize', 'Collaborate', 'Help'].map(group => <div className="ws-nav-group" key={group}><p>{group}</p>{tools.filter(t => t.group === group).map(t => { const Icon = icons[tools.indexOf(t)]; return <Link key={t.id} to={`?view=${t.id}`} aria-current={t.id === tool.id ? 'page' : undefined} onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' }); }}><Icon size={18}/><span>{t.label}</span>{t.id === 'my-work' && joined.filter(t => t.status !== 'done' && !t.pr).length > 0 && <small>{joined.filter(t => t.status !== 'done' && !t.pr).length}</small>}</Link>; })}</div>)}</nav>
-        <div className="ws-sidebar-bottom"><div className="ws-person"><span>{initials(name)}</span><div><strong>{name}</strong><small>{role} · {oauth ? 'Launchpad account' : 'Local account'}</small></div></div><button disabled={signingOut} onClick={async () => { setSigningOut(true); try { await signOut(); } catch (e) { notify(e.message, 'err'); setSigningOut(false); } }}><LogOut size={16}/>{signingOut ? 'Signing out…' : 'Sign out'}</button></div>
+        <div className="ws-sidebar-bottom"><div className="ws-person"><span>{initials(name)}</span><div><strong>{name}</strong><small>{accountRole} · {oauth ? 'Launchpad account' : 'Local account'}</small></div></div><button disabled={signingOut} onClick={async () => { setSigningOut(true); try { await signOut(); } catch (e) { notify(e.message, 'err'); setSigningOut(false); } }}><LogOut size={16}/>{signingOut ? 'Signing out…' : 'Sign out'}</button></div>
       </aside>
       <div className="ws-content">
         <div className="ws-page-heading"><div><p className="ws-breadcrumb">Studio <span>/</span> {tool.group}</p><h1 ref={heading} tabIndex={-1}>{tool.label}</h1><p>{tool.description}</p></div><button className="ws-help-link" onClick={() => go('Guide')}><BookOpen size={16}/>How it works</button></div>
-        {loading && required[tab].length ? <div className="ws-loading" role="status"><RefreshCw size={22}/><p>Loading your workspace…</p></div> : failures.length ? <div className="ws-error" role="alert"><h2>We couldn’t load this section.</h2><p>{errors[failures[0]]}</p><p>Your saved work hasn’t been cleared. Other tools are still available.</p><button className="ws-secondary" onClick={async () => { setLoading(true); await reload(); }}>Retry loading</button></div> : <Section ctx={ctx}/>}
+        {canSwitchView && <div className="ws-view-bar">
+          <div className="ws-view-toggle" role="group" aria-label="Workspace view">
+            <button type="button" aria-pressed={!studentView} onClick={() => switchView('admin')}>Admin view</button>
+            <button type="button" aria-pressed={studentView} onClick={() => switchView('student')}>Student view</button>
+          </div>
+          <p role="status">{studentView ? 'Admin tools are hidden. Actions still use your own account.' : 'Manage projects, tasks, and reviews.'}</p>
+        </div>}
+        {loading && required[tab].length ? <div className="ws-loading" role="status"><RefreshCw size={22}/><p>Loading your workspace…</p></div> : failures.length ? <div className="ws-error" role="alert"><h2>We couldn’t load this section.</h2><p>{errors[failures[0]]}</p><p>Your saved work hasn’t been cleared. Other tools are still available.</p><button className="ws-secondary" onClick={async () => { setLoading(true); await reload(); }}>Retry loading</button></div> : <Section key={`${tab}-${studentView ? 'student' : 'normal'}`} ctx={ctx}/>}
       </div>
     </div>
     {modal && <WorkOnItModal modal={modal} assignments={data.assignments} onConfirm={confirmWorkOn} onClose={() => { if (modal.busy) return; setModal(null); if (modal.phase === 'done') go('Timeline'); }} onInvite={() => { setModal(null); go('Forum'); }}/>}

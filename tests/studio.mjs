@@ -47,3 +47,23 @@ assert.equal(plural(1,'task'),'1 task'); assert.equal(plural(2,'task'),'2 tasks'
 const link=new URL(studioLink('projects','project / 1','task & 2','https://patech.example'));
 assert.equal(link.pathname,'/workspace'); assert.equal(link.searchParams.get('task'),'task & 2'); assert.equal(link.searchParams.get('project'),'project / 1');
 console.log('Project card permissions, closed/archived states and share links passed');
+
+const { workspaceView } = await import('../src/components/workspace/viewMode.js');
+const adminInfo = {admin:true,user_id:'me',review_url:'https://example.test/review'};
+const studentPreview = workspaceView('Admin',adminInfo,'student');
+assert.equal(studentPreview.canSwitchView,true);
+assert.equal(studentPreview.studentView,true);
+assert.equal(studentPreview.role,'Member');
+assert.equal(studentPreview.projectInfo.admin,false);
+assert.equal(studentPreview.projectInfo.review_url,null);
+assert.equal(studentPreview.projectInfo.user_id,'me');
+assert.equal(adminInfo.admin,true,'Viewing as a student must not mutate authenticated permissions');
+assert.equal(workspaceView('Admin',adminInfo,'admin').projectInfo,adminInfo);
+assert.equal(workspaceView('Admin',null,'student').role,'Member','Hide local admin UI while project data loads');
+assert.equal(workspaceView('Member',adminInfo,'student').canSwitchView,true,'Project admins can preview too');
+const memberView = workspaceView('Member',{admin:false},'admin');
+assert.equal(memberView.canSwitchView,false);
+assert.equal(memberView.role,'Member');
+assert.equal(memberView.projectInfo.admin,false,'A saved preference cannot grant admin access');
+assert.equal(workspaceView('Member',null,'student').studentView,false);
+console.log('Admin/student presentation toggle preserves identity and server permissions');
