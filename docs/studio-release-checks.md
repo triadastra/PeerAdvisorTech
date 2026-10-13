@@ -15,9 +15,12 @@ The studio now uses stable `?view=` links, a persistent tool directory, a search
 ## Before a public debut
 
 - Complete a real student task against a designated disposable repository: obtain a Git credential, clone, push, submit, approve the diff as admin, and verify the resulting GitHub PR. Local fixture UI checks do not prove these external operations.
+- Resolve legacy assignment Git access for new Launchpad users: the legacy Git server still authenticates with workspace email/password, while Launchpad project repositories use task credentials. Launchpad sign-in alone does not provision a legacy Git password.
 - Confirm which assignments should award contribution hours. Launchpad tasks and legacy scored assignments remain different workflows; completing a non-code project task does not automatically award hours. Existing project descriptions may promise credit that the scoring system does not implement.
 - Review project briefs, repository bindings, roles, and dates with the administrator. This change preserves that content.
 
 ## Repeatable UI preview
 
 Run `npm run build`, then `STUDIO_SCENARIO=/tmp/studio-scenario.json node tests/studio-preview.mjs`. Open `http://127.0.0.1:4175/workspace`. The server binds only to loopback and uses synthetic accounts and in-memory data, never a real Launchpad session. Change the scenario JSON and reload: `{ "admin": true }`, `{ "empty": true }`, `{ "fail": "/events" }`, or `{ "joinError": true }`. Do not deploy the fixture server.
+
+Production deployed and browser-verified: authenticated admin session survives deployment; overview, project directory, and existing project content load with the new shell. Environment, signing secret, and user database hashes were unchanged by the deployment.

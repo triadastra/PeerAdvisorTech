@@ -93,7 +93,7 @@ export default function Projects({ ctx, mine = false }) {
         <div className="flex gap-3"><button className="studio-primary" disabled={busy || !taskTitle.trim()}>{busy ? 'Adding…' : 'Publish task'}</button><button type="button" className={button} disabled={busy} onClick={() => setAddingTo(null)}>Cancel</button></div>
       </form>}
       {!p.tasks.length && <p className="p-5 text-sm text-ink-400">No active tasks in this project.</p>}
-      <details className="ws-project-tasks" open={mine || !!query || statusFilter !== 'all'}><summary>{p.tasks.length ? `View ${p.tasks.length} task${p.tasks.length === 1 ? '' : 's'}` : 'No active tasks'}</summary><ol className="divide-y divide-ink-800">{p.tasks.map((t, i) => {
+      {p.tasks.length > 0 && <details className="ws-project-tasks" open={mine || !!query || statusFilter !== 'all'}><summary>{p.tasks.length ? `View ${p.tasks.length} task${p.tasks.length === 1 ? '' : 's'}` : 'No active tasks'}</summary><ol className="divide-y divide-ink-800">{p.tasks.map((t, i) => {
         const isJoined = joined(t), closed = !!t.recruiting_ends_at && now >= t.recruiting_ends_at;
         const archived = !!t.archived_at;
         const finished = t.status === 'done' || !!t.pr, canJoin = !archived && t.status === 'open' && !closed && !finished;
@@ -120,7 +120,7 @@ git push origin main`}</pre></details>}
           {t.pr && <a className={button} href={t.pr} target="_blank" rel="noreferrer">Open GitHub PR ↗</a>}
           {isJoined && !archived && t.clone_url && <details><summary className="text-sm cursor-pointer">Clone, pull and push this task</summary><p className="text-xs text-ink-400 py-2">Replace YOUR_CREDENTIAL with your generated Git credential, then run these commands in a terminal.</p><pre className="bg-ink-950 p-3 text-xs text-ink-300 overflow-x-auto">{`git -c http.extraHeader="X-Patech-Git: YOUR_CREDENTIAL" clone ${t.clone_url}\ncd ${t.id}\ngit config http.${t.clone_url}.extraHeader "X-Patech-Git: YOUR_CREDENTIAL"\ngit pull --no-rebase origin main\n# Edit files, then:\ngit add .\ngit commit -m "Improve task"\ngit pull --no-rebase origin main\ngit push origin main`}</pre></details>}
         </li>;
-      })}</ol></details>
+      })}</ol></details>}
     </article>)}
     {taskFlow && <TaskFlowModal
       entry={taskFlow}
