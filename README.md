@@ -25,6 +25,41 @@ npm run preview  # preview the build
 npm run lint     # ESLint
 ```
 
+## Sign in with Launchpad
+
+Production (`npm start`) uses Launchpad OAuth by default. The `/access` page
+offers **Continue with Launchpad**, and the backend validates the access token
+with Launchpad before creating an HttpOnly session cookie. Password sign-in and
+registration are disabled while OAuth is enabled.
+
+For the hosted site, set these server-side values (never `VITE_` variables):
+
+```dotenv
+LAUNCHPAD_AUTH_REQUIRED=true
+APP_ORIGIN=https://patech.standardcas.org
+LAUNCHPAD_ISSUER=https://launchpad.standardcas.org
+HTTPS=true
+```
+
+`APP_ORIGIN` must be the exact public HTTPS origin, without a trailing slash.
+Launchpad supplies `/dashboard-api/oauth/sdk.js`, the same-origin OAuth bridge,
+and `/__lp_auth/callback`. Bind the app's domain in Launchpad before signing in.
+For an existing deployment, preserve `.env` and the entire `server/.data/`
+directory when updating source, rebuild the frontend, and restart the backend.
+Check `/api/auth/config` returns `{"oauth":true}` after deployment; a 404 means
+the running backend predates the integration.
+
+Accounts are matched by Launchpad's stable subject, never automatically by
+email. Optional `LAUNCHPAD_ADMIN_SUB` and `LAUNCHPAD_ADMIN_VID` must both match
+the administrator's verified Launchpad identity; otherwise accounts are members.
+Keep existing values when updating an established workspace.
+
+Local `npm run dev` retains password login when the setting is absent. Explicit
+`LAUNCHPAD_AUTH_REQUIRED=false` also enables that development flow. OAuth requires
+the Launchpad bridge; Vite alone does not supply it.
+
+Run `npm run test:oauth` for identity-validation and HTTP session checks.
+
 ## Structure
 
 ```

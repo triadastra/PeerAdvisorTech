@@ -613,7 +613,7 @@ app.use((err, _req, res, _next) => {
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`PATD workspace API → http://localhost:${PORT}`);
+  console.log(`PATD workspace API → http://localhost:${server.address().port}`);
 });
 
 server.on('error', (err) => {
