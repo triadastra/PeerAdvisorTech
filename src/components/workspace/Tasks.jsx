@@ -1,3 +1,4 @@
+import ConfirmDialog from './ConfirmDialog';
 import { useState } from 'react';
 import { projects } from '../../data/projects';
 import { priorities, priorityColor } from '../../data/workspace';
@@ -10,13 +11,14 @@ const inputCls = 'bg-transparent border-b border-ink-700 focus:border-acid-500 p
 const selectCls = 'bg-ink-900 border border-ink-700 focus:border-acid-500 py-2 px-2 text-ink-200 outline-none text-sm';
 
 export default function Tasks({ ctx }) {
-  const { user, tasks, profiles, reload, specFilter, setSpecFilter, notify } = ctx;
-  const [scope, setScope] = useState('Mine');
+  const { user, role, tasks, profiles, reload, specFilter, setSpecFilter, notify } = ctx;
+  const [scope, setScope] = useState(role === 'Admin' ? 'Mine' : 'Team');
   const [title, setTitle] = useState('');
   const [spec, setSpec] = useState('');
   const [priority, setPriority] = useState('Med');
   const [due, setDue] = useState('');
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(null);
 
   const nameById = Object.fromEntries(profiles.map((p) => [p.id, p.name]));
 
@@ -54,15 +56,7 @@ export default function Tasks({ ctx }) {
     }
   };
 
-  const remove = async (t) => {
-    try {
-      await deleteTask(t.id);
-      await reload();
-      notify(`Deleted · ${t.title}`);
-    } catch (err) {
-      notify(err?.message || 'Could not delete task.', 'err');
-    }
-  };
+  const remove = async (t) => { await deleteTask(t.id); await reload(); notify('Deleted successfully'); };
 
   return (
     <div className="space-y-8">
@@ -83,19 +77,19 @@ export default function Tasks({ ctx }) {
       )}
 
       {/* Add form */}
-      <form onSubmit={add} className="flex flex-wrap items-end gap-x-5 gap-y-3 border-y border-ink-800 py-5">
+      {role === 'Admin' ? <form onSubmit={add} className="flex flex-wrap items-end gap-x-5 gap-y-3 border-y border-ink-800 py-5">
         <div className="flex-1 min-w-[200px]">
-          <label className="kicker text-ink-500 block mb-1">New task or plan</label>
+          <label htmlFor="planner-title" className="kicker text-ink-500 block mb-1">New task or plan</label>
           <input
-            className={`${inputCls} w-full`}
+            id="planner-title" required maxLength={200} className={`${inputCls} w-full`}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="What needs to happen…"
           />
         </div>
         <div>
-          <label className="kicker text-ink-500 block mb-1">Spec</label>
-          <select className={selectCls} value={spec} onChange={(e) => setSpec(e.target.value)}>
+          <label htmlFor="planner-spec" className="kicker text-ink-500 block mb-1">Spec</label>
+          <select id="planner-spec" className={selectCls} value={spec} onChange={(e) => setSpec(e.target.value)}>
             <option value="">AIC</option>
             {specsSorted.map((p) => (
               <option key={p.id} value={p.spec}>S{p.spec} — {p.title}</option>
@@ -103,14 +97,14 @@ export default function Tasks({ ctx }) {
           </select>
         </div>
         <div>
-          <label className="kicker text-ink-500 block mb-1">Priority</label>
-          <select className={selectCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <label htmlFor="planner-priority" className="kicker text-ink-500 block mb-1">Priority</label>
+          <select id="planner-priority" className={selectCls} value={priority} onChange={(e) => setPriority(e.target.value)}>
             {priorities.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
         <div>
-          <label className="kicker text-ink-500 block mb-1">Due</label>
-          <input type="date" className={selectCls} value={due} onChange={(e) => setDue(e.target.value)} />
+          <label htmlFor="planner-due" className="kicker text-ink-500 block mb-1">Due</label>
+          <input id="planner-due" type="date" className={selectCls} value={due} onChange={(e) => setDue(e.target.value)} />
         </div>
         <button
           type="submit"
@@ -119,13 +113,14 @@ export default function Tasks({ ctx }) {
         >
           {busy ? 'Adding…' : 'Add →'}
         </button>
-      </form>
+      </form> : <p className="ws-note">Admins publish tasks in this planner. You can update tasks you own. To join a project, open <button className="underline" onClick={() => ctx.go('Groups & Tasks')}>Projects</button>.</p>}
 
       {/* Scope + spec filter */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
         {['Mine', 'Team'].map((s) => (
           <button
             key={s}
+            aria-pressed={scope === s}
             onClick={() => setScope(s)}
             className={`kicker transition-colors ${scope === s ? 'text-acid-500' : 'text-ink-500 hover:text-ink-200'}`}
           >
@@ -148,11 +143,11 @@ export default function Tasks({ ctx }) {
       <div className="border-t border-ink-800">
         {list.length === 0 && (
           <div className="py-8 text-center">
-            <p className="text-ink-500 text-sm">No tasks here yet — add one above.</p>
+            <p className="text-ink-500 text-sm">{role === 'Admin' ? 'No tasks here yet. Add a plan above.' : 'No tasks here yet. Check Team or explore a project.'}</p>
           </div>
         )}
         {list.map((t) => {
-          const mine = t.user_id === user.id || user.role === 'Admin';
+          const mine = t.user_id === user.id || role === 'Admin';
           const done = t.status === 'done';
           return (
             <div key={t.id} className="group flex items-center gap-3 border-b border-ink-800 py-3.5">
@@ -186,7 +181,7 @@ export default function Tasks({ ctx }) {
               </span>
               {mine && (
                 <button
-                  onClick={() => remove(t)}
+                  onClick={() => setDeleting(t)}
                   className="kicker text-ink-700 hover:text-[#fb7185] transition-colors shrink-0 opacity-0 group-hover:opacity-100"
                   aria-label="Delete task"
                 >
@@ -197,6 +192,7 @@ export default function Tasks({ ctx }) {
           );
         })}
       </div>
+      {deleting && <ConfirmDialog title={`Delete “${deleting.title}”?`} description="This planning task will be permanently removed." onClose={() => setDeleting(null)} onConfirm={() => remove(deleting)} />}
     </div>
   );
 }

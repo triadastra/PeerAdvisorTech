@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Home, FolderKanban, Hammer, ListTodo, CalendarDays, ChartNoAxesCombined, MessagesSquare, BookOpen, Search, Menu, X, ArrowUpRight, LogOut, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../lib/authContext';
-import { vidFor, listTracks, listAssignments, listForum, createAssignment, listTasks, listProfiles } from '../../lib/db';
+import { vidFor, listTracks, listAssignments, listForum, createAssignment, listTasks, listProfiles, listEvents } from '../../lib/db';
 import { initials } from './util';
 import Contributions from './Contributions';
 import Studio from './Studio';
@@ -12,231 +12,109 @@ import MyTimeline from './MyTimeline';
 import Groups from './Groups';
 import Forum from './Forum';
 import Tasks from './Tasks';
+import Calendar from './Calendar';
+import Guide from './Guide';
 import WorkOnItModal from './WorkOnItModal';
 import ThemeToggle from '../ThemeToggle';
+import Dialog from './Dialog';
+import { tools, toolFor, myProjectTasks } from './navigation';
 
-const TABS = ['Studio', 'Timeline', 'Groups & Tasks', 'Tasks & plans', 'Contributions', 'Forum'];
+const icons = [Home, Hammer, FolderKanban, ListTodo, CalendarDays, ChartNoAxesCombined, MessagesSquare, BookOpen];
+const sections = { Studio, Contributions, Timeline: MyTimeline, 'Groups & Tasks': Groups, 'Tasks & plans': Tasks, Forum, Calendar, Guide };
+const readers = { tracks: listTracks, assignments: listAssignments, forum: listForum, tasks: listTasks, profiles: listProfiles, events: listEvents };
+const required = { Studio: ['tracks', 'assignments'], Timeline: ['tracks', 'assignments'], 'Groups & Tasks': ['tracks', 'assignments'], 'Tasks & plans': ['tasks', 'profiles'], Forum: ['forum'], Calendar: ['events'], Contributions: ['assignments'], Guide: [] };
 
 export default function Workspace() {
   const { user, profile, signOut, oauth } = useAuth();
-  const [tab, setTab] = useState('Studio');
-  const [tracks, setTracks] = useState([]);
+  const [params, setParams] = useSearchParams();
+  const tool = toolFor(params.get('view'));
+  const tab = tool.key;
+  const [data, setData] = useState({ tracks: [], assignments: [], forum: [], tasks: [], profiles: [], events: [] });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
   const [projectInfo, setProjectInfo] = useState(null);
   const [projectError, setProjectError] = useState('');
-  const [projectsLoading, setProjectsLoading] = useState(true);
-  const reloadProjects = useCallback(async () => {
-    if (!oauth) { setProjects([]); setProjectInfo(null); setProjectsLoading(false); return; }
-    const [info, rows] = await Promise.all([api.projectService('/me'), api.projectService('/projects')]);
-    setProjectInfo(info); setProjects(rows); setProjectError('');
-  }, [oauth]);
-  // The Launchpad-backed projects flow only exists when Launchpad SSO is on.
-  // With local auth there is nothing to call — skip it instead of erroring.
-  useEffect(() => {
-    let active = true;
-    if (!oauth) {
-      // Local auth: the Launchpad projects flow doesn't exist — nothing to load.
-      queueMicrotask(() => { if (active) setProjectsLoading(false); });
-      return () => { active = false; };
-    }
-    Promise.all([api.projectService('/me'), api.projectService('/projects')])
-      .then(([info, rows]) => { if (active) { setProjectInfo(info); setProjects(rows); } })
-      .catch(e => { if (active) setProjectError(e.message); })
-      .finally(() => { if (active) setProjectsLoading(false); });
-    return () => { active = false; };
-  }, [oauth]);
-  const [assignments, setAssignments] = useState([]);
-  const [forum, setForum] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [profiles, setProfiles] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(oauth);
   const [specFilter, setSpecFilter] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
   const [toast, setToast] = useState(null);
-  const toastTimer = useRef(null);
-
-  // Work-on-it modal: { track, node } while choosing → confirmed assignment reveals the git link.
   const [modal, setModal] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [signingOut, setSigningOut] = useState(false);
+  const heading = useRef(null);
+  const toastTimer = useRef(null);
+  const mounted = useRef(false);
+  const loadVersion = useRef(0);
+  const projectVersion = useRef(0);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; clearTimeout(toastTimer.current); }; }, []);
 
   const reload = useCallback(async () => {
-    const [tr, a, f, tk, pf] = await Promise.all([listTracks(), listAssignments(), listForum(), listTasks(), listProfiles()]);
-    setTracks(tr);
-    setAssignments(a);
-    setForum(f);
-    setTasks(tk);
-    setProfiles(pf);
-    setLoading(false);
+    const version = ++loadVersion.current;
+    const keys = Object.keys(readers);
+    const results = await Promise.allSettled(keys.map(key => readers[key]()));
+    if (!mounted.current || version !== loadVersion.current) return;
+    const nextErrors = {};
+    const values = {};
+    results.forEach((r, i) => { if (r.status === 'fulfilled') values[keys[i]] = r.value; else nextErrors[keys[i]] = r.reason?.message || 'Please try again.'; });
+    setData(previous => ({ ...previous, ...values })); setErrors(nextErrors); setLoading(false);
+    return Object.keys(nextErrors).length === 0;
   }, []);
-
-  // Initial load (async IIFE so the effect body itself sets no state synchronously).
+  const reloadProjects = useCallback(async () => {
+    if (!oauth) return;
+    const version = ++projectVersion.current;
+    setProjectsLoading(true);
+    try {
+      const [info, rows] = await Promise.all([api.projectService('/me'), api.projectService('/projects')]);
+      if (!mounted.current || version !== projectVersion.current) return;
+      setProjectInfo(info); setProjects(rows); setProjectError('');
+    } catch (error) {
+      if (mounted.current && version === projectVersion.current) setProjectError(error.message);
+      throw error;
+    } finally { if (mounted.current && version === projectVersion.current) setProjectsLoading(false); }
+  }, [oauth]);
+  useEffect(() => { let active = true; queueMicrotask(() => { if (active) { void reload(); void reloadProjects().catch(() => {}); } }); return () => { active = false; }; }, [reload, reloadProjects]);
+  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, [tab]);
   useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const [tr, a, f, tk, pf] = await Promise.all([listTracks(), listAssignments(), listForum(), listTasks(), listProfiles()]);
-        if (!active) return;
-        setTracks(tr);
-        setAssignments(a);
-        setForum(f);
-        setTasks(tk);
-        setProfiles(pf);
-        setLoadError(false);
-      } catch {
-        if (active) setLoadError(true);
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => { active = false; };
+    const keydown = event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setSearchOpen(value => !value); } };
+    window.addEventListener('keydown', keydown); return () => window.removeEventListener('keydown', keydown);
   }, []);
-
-  const retryLoad = useCallback(() => {
-    setLoading(true);
-    setLoadError(false);
-    Promise.all([listTracks(), listAssignments(), listForum(), listTasks(), listProfiles()])
-      .then(([tr, a, f, tk, pf]) => {
-        setTracks(tr);
-        setAssignments(a);
-        setForum(f);
-        setTasks(tk);
-        setProfiles(pf);
-      })
-      .catch(() => setLoadError(true))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const notify = useCallback((msg, type = 'ok') => {
-    clearTimeout(toastTimer.current);
-    setToast({ msg, type });
-    toastTimer.current = setTimeout(() => setToast(null), 3200);
-  }, []);
-
+  const notify = useCallback((msg, type = 'ok') => { clearTimeout(toastTimer.current); setToast({ msg, type }); toastTimer.current = setTimeout(() => setToast(null), 6000); }, []);
+  const go = (value, context = {}) => { setParams({ view: toolFor(value).id, ...Object.fromEntries(['project', 'task'].filter(key => context[key]).map(key => [key, context[key]])) }); setMenuOpen(false); setSearchOpen(false); setQuery(''); window.scrollTo({ top: 0, behavior: 'instant' }); };
   const name = profile?.name || user?.name || user?.email?.split('@')[0] || 'Member';
   const role = profile?.role || user?.role || 'Member';
   const vid = profile?.vid || vidFor(user);
-
-  const myAssignments = assignments.filter((a) => a.member_ids?.includes(user?.id));
-  const go = (t) => setTab(t);
-  const openWorkOn = (track, node) => setModal({ track, node, phase: 'confirm' });
-
-  // Confirm → create/join the claim; on success the modal shows the git link.
-  const confirmWorkOn = useCallback(async () => {
-    if (!modal?.node) return;
-    setModal((m) => ({ ...m, busy: true }));
-    try {
-      const assignment = await createAssignment({ node_id: modal.node.id });
-      await reload();
-      setModal((m) => ({ ...m, busy: false, phase: 'done', assignment }));
-    } catch (err) {
-      setModal((m) => ({ ...m, busy: false }));
-      notify(err?.message || 'Could not start this step.', 'err');
-    }
-  }, [modal, reload, notify]);
-
-  const ctx = {
-    user, name, role, vid, oauth, projects, projectInfo, projectError, projectsLoading, reloadProjects,
-    tracks, assignments, forum, myAssignments,
-    tasks, profiles, specFilter, setSpecFilter,
-    loading, reload, notify, go, tab,
-    openWorkOn,
-    setForum,
+  const myAssignments = data.assignments.filter(a => a.member_ids?.includes(user?.id));
+  const joined = myProjectTasks(projects, projectInfo?.user_id);
+  const confirmWorkOn = async () => {
+    if (!modal?.node || modal.busy) return;
+    setModal(m => ({ ...m, busy: true }));
+    try { const assignment = await createAssignment({ node_id: modal.node.id }); await reload(); setModal(m => m && ({ ...m, busy: false, phase: 'done', assignment })); }
+    catch (error) { setModal(m => m && ({ ...m, busy: false })); notify(error.message, 'err'); }
   };
-
-  const Section = { Studio, Contributions, Timeline: MyTimeline, 'Groups & Tasks': Groups, 'Tasks & plans': Tasks, Forum }[tab];
-
-  return (
-    <div className="student-workspace min-h-screen">
-      {/* ── Top bar ── */}
-      <div className="sticky top-0 z-40 bg-ink-950/90 backdrop-blur-md border-b border-ink-800">
-        <div className="mx-auto max-w-[1100px] px-4 md:px-6 h-[60px] flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <span className="inline-block w-2 h-2 bg-acid-500" />
-            <span className="font-mono text-sm font-semibold text-ink-50">PATD<span className="text-ink-500 font-normal">/studio</span></span>
-          </Link>
-          <div className="flex items-center gap-2.5">
-            <span className="font-mono text-[10px] w-8 h-8 border border-acid-500/30 flex items-center justify-center text-acid-500 shrink-0">{initials(name)}</span>
-            <div className="hidden sm:block leading-tight">
-              <div className="text-[13px] text-ink-100">{name}</div>
-              <div className="kicker text-ink-700">{vid}{role === 'Admin' ? ' · Admin' : ''}</div>
-            </div>
-            <ThemeToggle className="ml-1 h-8 w-8" />
-            <button
-              onClick={signOut}
-              className="ml-1 kicker text-ink-500 hover:text-ink-200 transition-colors border border-ink-800 hover:border-ink-600 px-2.5 py-1"
-            >
-              Exit
-            </button>
-          </div>
-        </div>
-        {/* ── Tab strip ── */}
-        <div className="mx-auto max-w-[1100px] px-4 md:px-6">
-          <div className="flex items-center gap-7 md:gap-9 overflow-x-auto no-scrollbar">
-            {TABS.map((t) => (
-              <button
-                key={t}
-                onClick={() => go(t)}
-                aria-current={tab === t ? 'page' : undefined}
-                className={`kicker shrink-0 py-3 -mb-px border-b-2 transition-colors ${
-                  tab === t ? 'text-ink-50 border-acid-500' : 'text-ink-500 border-transparent hover:text-ink-200'
-                }`}
-              >
-                {{ Studio: 'Home base', Timeline: 'My builds', 'Groups & Tasks': 'Explore projects', 'Tasks & plans': 'Tasks & plans', Contributions: 'Contributions', Forum: 'Common room' }[t]}
-              </button>
-            ))}
-          </div>
-        </div>
+  const ctx = { user, name, role, vid, oauth, projects, projectInfo, projectError, projectsLoading, reloadProjects, ...data, myAssignments, specFilter, setSpecFilter, loading, reload, notify, go, tab, openWorkOn: (track, node) => setModal({ track, node, phase: 'confirm' }), setForum: forum => setData(d => ({ ...d, forum })) };
+  const Section = sections[tab];
+  const failures = required[tab].filter(key => errors[key]);
+  const searchResults = tools.filter(t => `${t.label} ${t.description}`.toLowerCase().includes(query.toLowerCase().trim()));
+  return <div className="student-workspace ws-shell">
+    <header className="ws-topbar">
+      <Link to="/" className="ws-brand" aria-label="PATD public website"><span className="ws-brand-mark">p.</span><strong>PATD<span>STUDIO</span></strong></Link>
+      <div className="ws-top-actions"><button aria-label="Find a tool" className="ws-search-trigger" onClick={() => setSearchOpen(true)}><Search size={17}/><span>Find a tool</span><kbd>⌘ K</kbd></button><ThemeToggle/><button className="ws-menu-toggle" aria-expanded={menuOpen} aria-controls="studio-navigation" aria-label={menuOpen ? 'Close navigation' : 'Open navigation'} onClick={() => setMenuOpen(v => !v)}>{menuOpen ? <X size={21}/> : <Menu size={21}/>}</button></div>
+    </header>
+    <div className="ws-layout">
+      <aside className={`ws-sidebar ${menuOpen ? 'is-open' : ''}`} id="studio-navigation">
+        <p className="ws-eyebrow ws-sidebar-label">YOUR WORKSPACE</p>
+        <nav aria-label="Studio tools">{['Workspace', 'Organize', 'Collaborate', 'Help'].map(group => <div className="ws-nav-group" key={group}><p>{group}</p>{tools.filter(t => t.group === group).map(t => { const Icon = icons[tools.indexOf(t)]; return <Link key={t.id} to={`?view=${t.id}`} aria-current={t.id === tool.id ? 'page' : undefined} onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'instant' }); }}><Icon size={18}/><span>{t.label}</span>{t.id === 'my-work' && joined.filter(t => t.status !== 'done' && !t.pr).length > 0 && <small>{joined.filter(t => t.status !== 'done' && !t.pr).length}</small>}</Link>; })}</div>)}</nav>
+        <div className="ws-sidebar-bottom"><div className="ws-person"><span>{initials(name)}</span><div><strong>{name}</strong><small>{role} · {oauth ? 'Launchpad account' : 'Local account'}</small></div></div><button disabled={signingOut} onClick={async () => { setSigningOut(true); try { await signOut(); } catch (e) { notify(e.message, 'err'); setSigningOut(false); } }}><LogOut size={16}/>{signingOut ? 'Signing out…' : 'Sign out'}</button></div>
+      </aside>
+      <div className="ws-content">
+        <div className="ws-page-heading"><div><p className="ws-breadcrumb">Studio <span>/</span> {tool.group}</p><h1 ref={heading} tabIndex={-1}>{tool.label}</h1><p>{tool.description}</p></div><button className="ws-help-link" onClick={() => go('Guide')}><BookOpen size={16}/>How it works</button></div>
+        {loading && required[tab].length ? <div className="ws-loading" role="status"><RefreshCw size={22}/><p>Loading your workspace…</p></div> : failures.length ? <div className="ws-error" role="alert"><h2>We couldn’t load this section.</h2><p>{errors[failures[0]]}</p><p>Your saved work hasn’t been cleared. Other tools are still available.</p><button className="ws-secondary" onClick={async () => { setLoading(true); await reload(); }}>Retry loading</button></div> : <Section ctx={ctx}/>}
       </div>
-
-      {/* ── Active section ── */}
-      <div className="mx-auto max-w-[1100px] px-4 md:px-6 py-8 md:py-10">
-        <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="min-w-0">
-          {loading ? (
-            <div className="space-y-3 animate-pulse">
-              {[1, 2, 3].map((i) => <div key={i} className="h-14 border border-ink-800 bg-ink-900/30" />)}
-            </div>
-          ) : loadError ? (
-            <div className="border border-ink-800 px-6 py-12 text-center">
-              <div className="kicker text-ink-500 mb-3">Connection problem</div>
-              <p className="text-ink-300 mb-6">The workspace couldn’t load. Check your connection and try again.</p>
-              <button
-                onClick={retryLoad}
-                className="kicker text-on-acid bg-acid-500 px-5 py-2.5 hover:bg-acid-400 transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          ) : (
-            Section && <Section ctx={ctx} />
-          )}
-        </motion.div>
-      </div>
-
-      {/* ── Work-on-it modal ── */}
-      <AnimatePresence>
-        {modal && (
-          <WorkOnItModal
-            modal={modal}
-            assignments={assignments}
-            onConfirm={confirmWorkOn}
-            onClose={() => { setModal(null); if (modal.phase === 'done') go('Timeline'); }}
-            onInvite={() => { setModal(null); go('Forum'); }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* ── Toast ── */}
-      {toast && (
-        <motion.div
-          key={toast.msg}
-          role="status"
-          aria-live="polite"
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 glass-panel rounded-m px-4 py-3 max-w-xs"
-        >
-          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: toast.type === 'err' ? '#fb7185' : '#c8f135' }} />
-          <span className="text-sm text-ink-100 leading-snug">{toast.msg}</span>
-        </motion.div>
-      )}
     </div>
-  );
+    {modal && <WorkOnItModal modal={modal} assignments={data.assignments} onConfirm={confirmWorkOn} onClose={() => { if (modal.busy) return; setModal(null); if (modal.phase === 'done') go('Timeline'); }} onInvite={() => { setModal(null); go('Forum'); }}/>}
+    {searchOpen && <Dialog titleId="tool-search-title" onClose={() => setSearchOpen(false)} className="ws-tool-dialog"><div className="ws-dialog-heading"><h2 id="tool-search-title">Find a tool</h2><button onClick={() => setSearchOpen(false)} aria-label="Close tool search"><X size={20}/></button></div><label className="ws-search-field"><Search size={19}/><input data-autofocus placeholder="Try projects, deadlines, hours…" aria-label="Search studio tools" value={query} onChange={e => setQuery(e.target.value)}/></label><div className="ws-tool-results">{searchResults.map(t => <button key={t.id} onClick={() => go(t.key)}><div><strong>{t.label}</strong><span>{t.description}</span></div><ArrowUpRight size={18}/></button>)}{!searchResults.length && <p>No tools match “{query}”. Try “projects”, “calendar”, or “hours”.</p>}</div></Dialog>}
+    {toast && <div className={`ws-toast ${toast.type === 'err' ? 'is-error' : ''}`} role={toast.type === 'err' ? 'alert' : 'status'}><span>{toast.msg}</span><button aria-label="Dismiss notification" onClick={() => setToast(null)}><X size={17}/></button></div>}
+  </div>;
 }

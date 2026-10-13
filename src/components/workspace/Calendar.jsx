@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom';
+import ConfirmDialog from './ConfirmDialog';
 import { useState } from 'react';
 import { projects } from '../../data/projects';
 import { createEvent, deleteEvent } from '../../lib/db';
@@ -14,15 +16,22 @@ const keyOfIso = (iso) => keyOf(new Date(iso));
 
 export default function CalendarView({ ctx }) {
   const { user, events, reload, notify } = ctx;
+  const [params] = useSearchParams();
+  const project = ctx.projects.find(p => p.id === params.get('project'));
+  const task = project?.tasks.find(t => t.id === params.get('task'));
+  const contextTitle = task ? `${project.title}: ${task.title}` : '';
+  const backToTask = () => ctx.go('Groups & Tasks', { project: project.id, task: task.id });
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selected, setSelected] = useState(keyOf(today));
 
-  const [title, setTitle] = useState('');
+  const [draftTitle, setTitle] = useState(null);
+  const title = draftTitle ?? contextTitle.slice(0, 200);
   const [time, setTime] = useState('10:00');
   const [spec, setSpec] = useState('');
   const [withWhom, setWithWhom] = useState('');
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(null);
 
   const byDay = {};
   for (const e of events) (byDay[keyOfIso(e.starts_at)] ||= []).push(e);
@@ -51,18 +60,11 @@ export default function CalendarView({ ctx }) {
     } finally { setBusy(false); }
   };
 
-  const remove = async (ev) => {
-    try {
-      await deleteEvent(ev.id);
-      await reload();
-      notify(`Event removed · ${ev.title}`);
-    } catch (err) {
-      notify(err?.message || 'Could not delete event.', 'err');
-    }
-  };
+  const remove = async (ev) => { await deleteEvent(ev.id); await reload(); notify('Deleted successfully'); };
 
   return (
     <div className="grid lg:grid-cols-[1fr_320px] gap-8 lg:gap-10">
+      {task && <div className="pc-context lg:col-span-2"><span>Planning a session for {contextTitle}. Choose a date and time below.</span><button onClick={backToTask}>Back to task</button></div>}
       {/* Month grid */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -87,6 +89,8 @@ export default function CalendarView({ ctx }) {
             return (
               <button
                 key={k}
+                aria-pressed={isSel}
+                aria-label={`${d.toLocaleDateString([], { dateStyle: 'full' })}, ${dayEvents.length} events`}
                 onClick={() => setSelected(k)}
                 className={`relative border-r border-b border-ink-800 h-16 md:h-20 p-1.5 text-left transition-colors ${isSel ? 'bg-ink-900' : 'hover:bg-ink-900/50'} ${isToday ? 'ring-1 ring-inset ring-acid-500/30' : ''}`}
               >
@@ -117,28 +121,29 @@ export default function CalendarView({ ctx }) {
               </span>
               <SpecTag n={ev.spec} />
               {ev.user_id === user.id && (
-                <button onClick={() => remove(ev)} className="kicker text-ink-700 hover:text-[#fb7185] transition-colors opacity-0 group-hover:opacity-100" aria-label="Delete event">✕</button>
+                <button onClick={() => setDeleting(ev)} className="kicker text-ink-700 hover:text-[#fb7185] transition-colors opacity-0 group-hover:opacity-100" aria-label="Delete event">✕</button>
               )}
             </div>
           ))}
         </div>
 
         <form onSubmit={add} className="space-y-3">
-          <div className="kicker text-ink-500">Add event</div>
-          <input className={`${inputCls} w-full`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event title" />
+          <div className="kicker text-ink-500">Add event</div><p className="text-xs text-ink-400">Times use {Intl.DateTimeFormat().resolvedOptions().timeZone}. Events are visible to the team; attendee names do not send invitations.</p>
+          <input aria-label="Event title" required maxLength={200} className={`${inputCls} w-full`} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event title" />
           <div className="flex gap-3">
-            <input type="time" className={selectCls} value={time} onChange={(e) => setTime(e.target.value)} />
-            <select className={`${selectCls} flex-1`} value={spec} onChange={(e) => setSpec(e.target.value)}>
+            <input aria-label="Event time" required type="time" className={selectCls} value={time} onChange={(e) => setTime(e.target.value)} />
+            <select aria-label="Project specification" className={`${selectCls} flex-1 min-w-0`} value={spec} onChange={(e) => setSpec(e.target.value)}>
               <option value="">AIC</option>
               {specsSorted.map((p) => <option key={p.id} value={p.spec}>S{p.spec} — {p.title}</option>)}
             </select>
           </div>
-          <input className={`${inputCls} w-full`} value={withWhom} onChange={(e) => setWithWhom(e.target.value)} placeholder="With… (optional)" />
+          <input aria-label="Attendees (optional)" className={`${inputCls} w-full`} value={withWhom} onChange={(e) => setWithWhom(e.target.value)} placeholder="With… (optional)" />
           <button type="submit" disabled={!title.trim() || busy} className="w-full kicker text-on-acid bg-acid-500 px-4 py-2.5 hover:bg-acid-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             {busy ? 'Adding…' : 'Add to ' + selected.slice(5)}
           </button>
         </form>
       </aside>
+      {deleting && <ConfirmDialog title={`Delete “${deleting.title}”?`} description="This event will be permanently removed from the team calendar." onClose={() => setDeleting(null)} onConfirm={() => remove(deleting)} />}
     </div>
   );
 }

@@ -7,7 +7,7 @@
 const BASE = '/api';
 
 const OFFLINE_MSG =
-  'Can’t reach the workspace API. Make sure the backend is running — start it with `npm run dev` (it runs the web app and API together).';
+  'The workspace connection is unavailable. Check your connection and try again. If this continues, contact your administrator.';
 
 async function request(path, { method = 'GET', body } = {}) {
   let res;

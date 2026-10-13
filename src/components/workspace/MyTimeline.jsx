@@ -39,7 +39,7 @@ function LegacyMyTimeline({ ctx }) {
   if (myTracks.length === 0) {
     return (
       <div>
-        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">My builds</h1>
+        <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">My studio assignments</h2>
         <p className="mt-3 text-ink-300 max-w-lg">Nothing here yet. Head to <span className="text-ink-100">Explore projects</span>, pick a step to work on, and it’ll show up on your timeline.</p>
         <button onClick={() => go('Groups & Tasks')} className="mt-6 kicker text-on-acid bg-acid-500 px-5 py-3 hover:bg-acid-400 transition-colors">
           Explore projects →
@@ -53,7 +53,7 @@ function LegacyMyTimeline({ ctx }) {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">My builds</h1>
+        <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">My studio assignments</h2>
         <p className="mt-2 kicker text-ink-500">{myAssignments.length} step{myAssignments.length === 1 ? '' : 's'} · {myTracks.length} group{myTracks.length === 1 ? '' : 's'} · select a node to act on it</p>
       </div>
 
@@ -169,5 +169,5 @@ function LegacyMyTimeline({ ctx }) {
 }
 
 export default function MyTimeline({ ctx }) {
-  return <div className="space-y-10">{ctx.oauth && <Projects ctx={ctx} mine />}{ctx.tracks.length > 0 && <LegacyMyTimeline ctx={ctx} />}</div>;
+  return <div className="space-y-10">{ctx.oauth && <Projects ctx={ctx} mine />}{(!ctx.oauth || ctx.myAssignments.length > 0) && <section className="ws-assignment-catalog"><LegacyMyTimeline ctx={ctx} /></section>}</div>;
 }
