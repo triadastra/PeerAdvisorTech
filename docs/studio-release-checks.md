@@ -24,3 +24,5 @@ The studio now uses stable `?view=` links, a persistent tool directory, a search
 Run `npm run build`, then `STUDIO_SCENARIO=/tmp/studio-scenario.json node tests/studio-preview.mjs`. Open `http://127.0.0.1:4175/workspace`. The server binds only to loopback and uses synthetic accounts and in-memory data, never a real Launchpad session. Change the scenario JSON and reload: `{ "admin": true }`, `{ "empty": true }`, `{ "fail": "/events" }`, or `{ "joinError": true }`. Do not deploy the fixture server.
 
 Production deployed and browser-verified: authenticated admin session survives deployment; overview, project directory, and existing project content load with the new shell. Environment, signing secret, and user database hashes were unchanged by the deployment.
+
+The host supplies a development environment during dependency installation. The build script now explicitly sets `NODE_ENV=production` so a deploy cannot ship the React development runtime. Verify the rebuilt assets, not just source hashes.
