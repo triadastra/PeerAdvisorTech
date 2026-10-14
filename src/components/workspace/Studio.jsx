@@ -1,57 +1,20 @@
-import { useState, useEffect } from 'react';
-import { ArrowUpRight, Sparkles, Users, Flag, Code2 } from 'lucide-react';
+import { ArrowUpRight, FolderKanban, Hammer, MessagesSquare, BookOpen, ArrowRight, CheckCheck } from 'lucide-react';
+import { myProjectTasks, projectTaskState } from './navigation';
 
 export default function Studio({ ctx }) {
-  const { name, tracks, myAssignments, assignments, forum, openWorkOn, go } = ctx;
-  const starters = tracks.filter((t) => t.category === 'School starter');
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => { const timer = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(timer); }, []);
-  const projectTasks = (ctx.projects || []).flatMap(p => p.tasks).filter(t => !t.archived_at);
-  const mine = projectTasks.filter(t => t.members.includes(ctx.projectInfo?.user_id));
-  const recruiting = [...assignments.filter((a) => a.status === 'recruiting'), ...projectTasks.filter(t => t.status === 'open' && t.recruiting_ends_at > now)];
-  const joined = new Set([...myAssignments.map((a) => a.track_id), ...mine.map(t => t.project_id)]);
-  const joinedSteps = myAssignments.length + mine.length;
-  return (
-    <div className="studio-home">
-      <div className="studio-eyebrow"><span className="studio-live" /> THE SCHOOL BUILD CLUB <span>Small ideas. Real impact.</span></div>
-      <section className="studio-hero">
-        <div>
-          <p className="studio-greeting">Hey {name.split(' ')[0]}, welcome to your studio.</p>
-          <h1>Make school<br />a little <em>better.</em></h1>
-          <p className="studio-intro">That thing you wish your school had? You can build it. Pick a tiny challenge, bring a friend, and learn as you go.</p>
-          <button className="studio-primary" onClick={() => go('Groups & Tasks')}>Find your first project <ArrowUpRight size={18} /></button>
-          <span className="studio-footnote">Designers, coders, curious people — everyone belongs.</span>
-        </div>
-        <div className="studio-notebook">
-          <span className="studio-sticker">YOUR NEXT SIDE PROJECT ↗</span>
-          <div className="studio-doodle"><Code2 size={42} strokeWidth={1.5} /><span>made by us.<br />used by our school.</span></div>
-          <h2>Start small. Make it real.</h2>
-          <ol><li><b>01</b> Find one everyday school problem</li><li><b>02</b> Build the smallest useful version</li><li><b>03</b> Let a classmate try it</li></ol>
-          <div className="studio-note">Your first version is allowed to be a bit messy.</div>
-        </div>
-      </section>
-      <section className="studio-pulse" aria-label="Your studio activity">
-        <div><Flag size={18}/><strong>{joined.size}</strong><span>projects you joined</span></div>
-        <div><Users size={18}/><strong>{recruiting.length}</strong><span>steps welcoming teammates</span></div>
-        <div><Sparkles size={18}/><strong>{forum.length}</strong><span>common room posts</span></div>
-      </section>
-      {starters.length > 0 && <section>
-        <div className="studio-section-head"><div><p className="studio-eyebrow">A GOOD PLACE TO START</p><h2>Built for your school.</h2></div><button onClick={() => go('Groups & Tasks')}>All projects <ArrowUpRight size={16}/></button></div>
-        <div className="studio-project-grid">
-          {starters.map((t, i) => <article className="studio-project" key={t.id} style={{ '--project-color': t.color }}>
-            <div className="studio-project-top"><span>0{i + 1} / SCHOOL LIFE</span><span className="studio-project-symbol">{['✳', '↗', '✦'][i]}</span></div>
-            <h3>{t.title}</h3><p>{t.blurb}</p>
-            <div className="studio-project-tags"><span>Beginner friendly</span><span>Design · Code · Test</span></div>
-            <div className="studio-first-step"><span>YOUR FIRST SMALL WIN</span><strong>{t.nodes[0].title}</strong><p>{t.nodes[0].detail}</p></div>
-            <button onClick={() => joined.has(t.id) ? go('Timeline') : openWorkOn(t, t.nodes[0])}>{joined.has(t.id) ? 'Continue your build' : 'Try this challenge'} <ArrowUpRight size={17}/></button>
-          </article>)}
-        </div>
-      </section>}
-      <section className="studio-bottom-grid">
-        <div className="studio-next"><span className="studio-eyebrow">YOUR NEXT MOVE</span><h2>{joinedSteps ? 'Keep the momentum going.' : 'No experience? Start with curiosity.'}</h2><p>{joinedSteps ? `You’ve joined ${joinedSteps} project step${joinedSteps === 1 ? '' : 's'}. Open your builds for the brief, your teammates, and your shared code.` : 'You don’t need to write code on day one. Interview a friend, sketch a screen, or test someone’s prototype. It all counts as building.'}</p><button onClick={() => go(joinedSteps ? 'Timeline' : 'Groups & Tasks')}>{joinedSteps ? 'Open my builds' : 'Explore the first steps'} →</button></div>
-        <div className="studio-room"><span className="studio-eyebrow">THE COMMON ROOM</span><h2>Better with a buddy.</h2><p>Find someone to build with, share a small win, or ask that question you think is too basic. We all started somewhere.</p><button onClick={() => go('Forum')}>Meet your fellow builders <ArrowUpRight size={17}/></button></div>
-      </section>
-      <p className="studio-footer">A sketch counts. A bug fixed counts. Helping a friend counts. Keep making things.</p>
-    </div>
-  );
+  const admin = ctx.projectInfo?.admin;
+  const mine = myProjectTasks(ctx.projects, ctx.projectInfo?.user_id);
+  const active = mine.filter(t => !t.pr && t.status !== 'done');
+  const localActive = ctx.myAssignments.filter(t => t.status !== 'done');
+  const count = active.length + localActive.length;
+  const review = mine.filter(t => projectTaskState(t) === 'In review').length;
+  const projectUnavailable = ctx.oauth && (ctx.projectsLoading || ctx.projectError);
+  return <div className="ws-home">
+    <section className="ws-welcome"><div><p className="ws-eyebrow">A LITTLE PROGRESS, EVERY DAY</p><h2>Good to see you,<br/><em>{ctx.name.split(' ')[0]}.</em></h2><p>{admin ? 'Publish clear briefs, help your team move forward, and review the work that is ready.' : count ? 'Pick up where you left off. Your tasks, teammates, and tools are all here.' : 'Find a project you care about, join a task, and make something useful together.'}</p><button className="studio-primary" onClick={() => ctx.go(admin ? 'Groups & Tasks' : count ? 'Timeline' : 'Groups & Tasks')}>{admin ? 'Manage projects' : count ? 'Continue my work' : 'Find a project'}<ArrowUpRight size={18}/></button><button className="ws-text-button" onClick={() => ctx.go('Guide')}>New here? Take a quick tour <ArrowRight size={15}/></button></div><div className="ws-welcome-note"><span>THE WAY WE WORK</span><ol><li><b>01</b><div><strong>Find your next task</strong><p>Read the brief. Choose something that fits.</p></div></li><li><b>02</b><div><strong>Build with your team</strong><p>Share progress and ask for help early.</p></div></li><li><b>03</b><div><strong>Finish with confidence</strong><p>Check your work, then send it for review.</p></div></li></ol><p><CheckCheck size={16}/> Small steps. Useful work.</p></div></section>
+    {ctx.projectError && <div className="ws-error" role="alert"><strong>Project activity couldn’t load.</strong><p>{ctx.projectError}</p><button className="ws-secondary" disabled={ctx.projectsLoading} onClick={() => ctx.reloadProjects().catch(() => {})}>Retry projects</button></div>}
+    <section className="ws-metrics" aria-label="Your work summary">{[[Hammer, projectUnavailable ? '—' : count, 'Active tasks', 'Timeline'],[FolderKanban, projectUnavailable ? '—' : (ctx.oauth ? ctx.projects.length : ctx.tracks.length), 'Projects to explore', 'Groups & Tasks'],[CheckCheck, projectUnavailable ? '—' : review, 'Your tasks in review', 'Timeline']].map(([Icon, value, label, route]) => <button key={label} onClick={() => ctx.go(route)}><Icon size={19}/><div><strong>{value}</strong><span>{label}</span></div><ArrowUpRight size={16}/></button>)}</section>
+    <div className="ws-home-columns"><section className="ws-panel"><div className="ws-section-head"><h2>Pick up where you left off</h2><button onClick={() => ctx.go('Timeline')}>All my work <ArrowUpRight size={15}/></button></div>{projectUnavailable ? <p className="ws-empty">{ctx.projectsLoading ? 'Loading your project activity…' : 'Retry project activity to see your tasks.'}</p> : active.length ? <div className="ws-work-list">{active.slice(0,4).map(task => <button key={task.id} onClick={() => ctx.go('Timeline')}><span className="ws-task-dot"/><div><small>{task.project_title}</small><strong>{task.title}</strong><span>{projectTaskState(task)} · {task.repository ? 'Code task' : 'Non-code task'}</span></div><ArrowUpRight size={18}/></button>)}</div> : <div className="ws-empty"><Hammer size={27}/><h3>{localActive.length ? 'Your assignments are ready.' : 'Your next project starts here.'}</h3><p>{localActive.length ? 'Open My work to continue the assignments you joined.' : 'You haven’t joined an active task yet. Browse a project, read its brief, and join when you’re ready.'}</p><button className="ws-secondary" onClick={() => ctx.go(localActive.length ? 'Timeline' : 'Groups & Tasks')}>{localActive.length ? 'Open my work' : 'Browse projects'}<ArrowRight size={16}/></button></div>}</section>
+    <aside className="ws-panel ws-help-card"><BookOpen size={24}/><h2>Know your next step.</h2><p>Joining a team, using Git, submitting work, or understanding hours: the Studio guide walks you through it.</p><button className="ws-secondary" onClick={() => ctx.go('Guide')}>Open the guide <ArrowUpRight size={16}/></button><div><MessagesSquare size={19}/><strong>Stuck on something?</strong><p>Ask a clear question in Discussion. Include what you tried and what happened.</p><button className="ws-text-button" onClick={() => ctx.go('Forum')}>Ask the team <ArrowRight size={15}/></button></div></aside></div>
+    <section><div className="ws-section-head"><h2>Make room for good work.</h2><span>EVERY TOOL, ONE CLEAR PURPOSE</span></div><div className="ws-quick-tools">{[['Calendar','Plan a work session','Make time to build with your team.'],['Tasks & plans','Check team priorities','See what needs doing and when.'],['Contributions','Review your contributions','Track eligible work and credited hours.']].map(([route,title,copy]) => <button key={route} onClick={() => ctx.go(route)}><ArrowUpRight size={20}/><strong>{title}</strong><span>{copy}</span></button>)}</div></section>
+  </div>;
 }

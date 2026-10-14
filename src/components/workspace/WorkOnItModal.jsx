@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import Dialog from './Dialog';
 import { fmtCountdown } from './util';
 
 function CopyRow({ label, value }) {
@@ -39,29 +39,20 @@ export default function WorkOnItModal({ modal, assignments, onConfirm, onClose, 
   const a = assignment;
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink-950/80 backdrop-blur-sm p-0 sm:p-6"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }} transition={{ duration: 0.2 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-lg glass-panel max-h-[92vh] overflow-y-auto"
-      >
+    <Dialog titleId="work-on-title" busy={busy} onClose={onClose}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-ink-800 px-6 py-4">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: track.color }} />
             <span className="kicker text-ink-400 truncate">{track.title} · S{track.spec}</span>
           </div>
-          <button onClick={onClose} className="kicker text-ink-500 hover:text-ink-100 shrink-0">Close ✕</button>
+          <button disabled={busy} onClick={onClose} className="kicker text-ink-500 hover:text-ink-100 shrink-0">Close ✕</button>
         </div>
 
         {phase === 'confirm' ? (
           <div className="px-6 py-6">
             <div className="kicker text-acid-500 mb-2">{joining ? 'Join this step' : 'Work on this step'}</div>
-            <h2 className="font-display text-2xl text-ink-50 leading-tight">{node.title}</h2>
+            <h2 id="work-on-title" className="font-display text-2xl text-ink-50 leading-tight">{node.title}</h2>
             <p className="mt-2 text-ink-300 text-sm leading-relaxed">{node.detail}</p>
 
             {/* Recruiting notice */}
@@ -91,13 +82,13 @@ export default function WorkOnItModal({ modal, assignments, onConfirm, onClose, 
               >
                 {busy ? 'Working…' : joining ? 'Join & confirm →' : 'Confirm — I’ll work on it →'}
               </button>
-              <button onClick={onClose} className="kicker text-ink-500 hover:text-ink-200">Not now</button>
+              <button disabled={busy} onClick={onClose} className="kicker text-ink-500 hover:text-ink-200">Not now</button>
             </div>
           </div>
         ) : (
           <div className="px-6 py-6">
             <div className="kicker text-acid-500 mb-2">You’re on it ✓</div>
-            <h2 className="font-display text-2xl text-ink-50 leading-tight">{a?.node_title}</h2>
+            <h2 id="work-on-title" className="font-display text-2xl text-ink-50 leading-tight">{a?.node_title}</h2>
             <p className="mt-2 text-ink-300 text-sm">
               {a?.members?.length > 1 ? <>Team: <span className="text-ink-100">{a.members.join(', ')}</span>. </> : null}
               Recruiting closes in <span className="text-acid-500 tnum">{fmtCountdown(a?.recruiting_ends_at)}</span> — invite a friend before it locks.
@@ -125,12 +116,11 @@ export default function WorkOnItModal({ modal, assignments, onConfirm, onClose, 
             )}
 
             <div className="mt-6 flex items-center gap-3">
-              <button onClick={onClose} className="kicker btn-acid px-5 py-3">Continue →</button>
+              <button disabled={busy} onClick={onClose} className="kicker btn-acid px-5 py-3">Continue →</button>
               <button onClick={onInvite} className="kicker text-ink-500 hover:text-ink-200">Invite a friend in the forum</button>
             </div>
           </div>
         )}
-      </motion.div>
-    </motion.div>
+    </Dialog>
   );
 }

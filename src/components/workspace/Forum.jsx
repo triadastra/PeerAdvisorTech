@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom';
+import ConfirmDialog from './ConfirmDialog';
 import { useState } from 'react';
 import { createPost, deletePost } from '../../lib/db';
 import { initials } from './util';
@@ -12,12 +14,19 @@ function timeAgo(iso) {
 
 export default function Forum({ ctx }) {
   const { user, forum, reload, notify } = ctx;
-  const [body, setBody] = useState('');
+  const [params] = useSearchParams();
+  const project = ctx.projects.find(p => p.id === params.get('project'));
+  const task = project?.tasks.find(t => t.id === params.get('task'));
+  const contextTitle = task ? `${project.title}: ${task.title}` : '';
+  const backToTask = () => ctx.go('Groups & Tasks', { project: project.id, task: task.id });
+  const [draft, setBody] = useState(null);
+  const body = draft ?? (contextTitle ? `About ${contextTitle}\n\n` : '');
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(null);
 
   const post = async () => {
     const text = body.trim();
-    if (!text) return;
+    if (!text || busy) return;
     setBusy(true);
     try {
       await createPost({ body: text });
@@ -30,14 +39,12 @@ export default function Forum({ ctx }) {
     }
   };
 
-  const remove = async (id) => {
-    try { await deletePost(id); await reload(); } catch (err) { notify(err?.message || 'Could not delete.', 'err'); }
-  };
+  const remove = async (id) => { await deletePost(id); await reload(); notify('Post deleted'); };
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">The common room</h1>
+        <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">The common room</h2>
         <p className="mt-2 text-ink-300">Find teammates, share progress, ask for a hand. Recruiting a friend for a step? Post it here.</p>
       </div>
 
@@ -46,12 +53,13 @@ export default function Forum({ ctx }) {
           ['Find a teammate', 'I’m building…\nI’d love a teammate who can help with…\nLet’s start with…'],
           ['Ask for help', 'I’m trying to…\nI expected…\nWhat actually happened…\nI’ve already tried…'],
           ['Share a small win', 'Today I made…\nSomething I learned…\nNext I want to try…'],
-        ].map(([label, template]) => <button key={label} onClick={() => setBody(current => current.trim() ? `${current}\n\n${template}` : template)} className="border border-ink-700 rounded-full px-4 py-2 text-sm text-ink-200 hover:border-acid-500">{label}</button>)}
+        ].map(([label, template]) => <button key={label} onClick={() => setBody(current => (current ?? body).trim() ? `${current ?? body}\n\n${template}` : template)} className="border border-ink-700 rounded-full px-4 py-2 text-sm text-ink-200 hover:border-acid-500">{label}</button>)}
       </div>
+      {task && <div className="pc-context"><span>Draft about {contextTitle}. Visible to the whole team when posted.</span><button onClick={backToTask}>Back to task</button></div>}
       {/* Composer */}
       <div className="border border-ink-700 bg-ink-900/60 p-4">
         <textarea
-          aria-label="Your common room post"
+          aria-label="Your discussion post" maxLength={10000}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') post(); }}
@@ -83,7 +91,7 @@ export default function Forum({ ctx }) {
                 <span className="text-[13px] text-ink-100">{p.author}</span>
                 <span className="kicker text-ink-600">· {timeAgo(p.created_at)}</span>
                 {p.user_id === user.id && (
-                  <button onClick={() => remove(p.id)} className="ml-auto kicker text-ink-600 hover:text-[#fb7185] transition-colors">Delete</button>
+                  <button onClick={() => setDeleting(p.id)} className="ml-auto kicker text-ink-600 hover:text-[#fb7185] transition-colors">Delete</button>
                 )}
               </div>
               <p className="text-sm text-ink-200 leading-relaxed whitespace-pre-wrap">{p.body}</p>
@@ -91,6 +99,7 @@ export default function Forum({ ctx }) {
           ))}
         </div>
       )}
+      {deleting && <ConfirmDialog title="Delete this discussion post?" description="Your post will be permanently removed from Discussion." onClose={() => setDeleting(null)} onConfirm={() => remove(deleting)} />}
     </div>
   );
 }

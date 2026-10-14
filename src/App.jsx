@@ -332,7 +332,7 @@ export default function App() {
   const isApp = location.pathname.startsWith('/workspace');
 
   useEffect(() => {
-    if (reduce) return;
+    if (reduce || isApp) return;
     const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
     setLenis(lenis);
     let raf;
@@ -346,7 +346,7 @@ export default function App() {
       lenis.destroy();
       setLenis(null);
     };
-  }, [reduce]);
+  }, [reduce, isApp]);
 
   useEffect(() => {
     jumpToTop();
