@@ -17,7 +17,7 @@ function LegacyGroups({ ctx }) {
 
   if (!tracks.length) return (
     <div className="space-y-5">
-      <h1 className="font-display text-3xl md:text-4xl font-semibold text-ink-50">Explore projects</h1>
+      <h2 className="font-display text-3xl md:text-4xl font-semibold text-ink-50">Explore projects</h2>
       <p className="text-ink-400">No projects published here yet.</p>
     </div>
   );
@@ -28,7 +28,7 @@ function LegacyGroups({ ctx }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">Find your next build.</h1>
+        <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-[-0.02em] text-ink-50">Assignment tracks</h2>
         <p className="mt-2 text-ink-300 max-w-xl">Start with a sketch, some code, or a quick test. Pick a small step that sounds fun; classmates can join you during the first 24 hours.</p>
       </div>
 
@@ -94,5 +94,5 @@ function LegacyGroups({ ctx }) {
 export default function Groups({ ctx }) {
   // Launchpad-published projects only exist under Launchpad SSO; the local
   // seeded tracks (below) are the always-on catalog.
-  return <div className="space-y-10">{ctx.oauth && <Projects ctx={ctx} />}{ctx.tracks.length > 0 && <LegacyGroups ctx={ctx} />}</div>;
+  return <div className="space-y-10">{ctx.oauth && <Projects ctx={ctx} />}{ctx.oauth && ctx.tracks.length > 0 ? <details className="ws-assignment-catalog"><summary><strong>Studio assignments for credited hours</strong><span>{ctx.tracks.length} assignment tracks · separate from Launchpad project review</span></summary><p>These older assignments use a separate workspace Git login for contribution scoring. Launchpad sign-in does not create that Git password. Check access with your administrator before joining; use the projects above for Launchpad code submissions.</p><LegacyGroups ctx={ctx} /></details> : !ctx.oauth && <LegacyGroups ctx={ctx} />}</div>;
 }

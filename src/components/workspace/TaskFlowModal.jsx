@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fmtCountdown } from './util';
+import Dialog from './Dialog';
 
 function CopyRow({ label, value }) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState('');
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(value);
-      setCopied(true);
+      setCopied(true); setCopyError('');
       setTimeout(() => setCopied(false), 1400);
-    } catch { /* clipboard access is optional */ }
+    } catch { setCopyError('Copy unavailable. Select the value and copy it manually.'); }
   };
   return <div>
     <div className="kicker text-ink-500 mb-1.5">{label}</div>
@@ -16,6 +18,7 @@ function CopyRow({ label, value }) {
       <code className="flex-1 min-w-0 px-3 py-2.5 font-mono text-[12px] text-acid-500 overflow-x-auto no-scrollbar whitespace-nowrap">{value}</code>
       <button type="button" onClick={copy} className="kicker px-3 border-l border-ink-700 text-ink-400 hover:text-ink-50 hover:bg-ink-900 transition-colors shrink-0">{copied ? '✓' : 'Copy'}</button>
     </div>
+    {copyError && <p role="status" className="text-xs text-ink-300 mt-2">{copyError}</p>}
   </div>;
 }
 
@@ -27,6 +30,7 @@ function Step({ number, title, children, active = false, complete = false }) {
 }
 
 export default function TaskFlowModal({ entry, info, busy, error, onJoin, onSync, onSubmit, onClose }) {
+  const titleRef = useRef(null);
   const [phase, setPhase] = useState(entry.joined ? 'workspace' : 'confirm');
   const [task, setTask] = useState(entry.task);
   const [now, setNow] = useState(() => Date.now());
@@ -35,46 +39,55 @@ export default function TaskFlowModal({ entry, info, busy, error, onJoin, onSync
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => { titleRef.current?.focus(); }, [phase]);
+
   const pushed = !!task.head && !!task.base_sha && task.head !== task.base_sha;
   const reviewReady = task.status === 'review' || !!task.submission;
   const recruitingOpen = task.recruiting_ends_at && now < task.recruiting_ends_at;
-  const update = result => setTask(result?.task || result);
+  const update = result => setTask(previous => ({ ...previous, ...(result?.task || result) }));
 
   const join = async () => {
-    update(await onJoin(task));
-    setPhase('workspace');
+    try { update(await onJoin(task)); setPhase('workspace'); } catch { /* Parent displays the error without losing this task. */ }
   };
-  const sync = async () => update(await onSync(task));
-  const submit = async () => update(await onSubmit(task));
+  const sync = async () => { try { update(await onSync(task)); } catch { /* Parent displays the error. */ } };
+  const submit = async () => { try { update(await onSubmit(task)); } catch { /* Parent displays the error. */ } };
 
-  return <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink-950/80 backdrop-blur-sm p-0 sm:p-6" onClick={onClose}>
+  return <Dialog titleId="task-flow-title" busy={busy} onClose={onClose}>
     <div className="w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto bg-ink-900 border border-ink-700" onClick={e => e.stopPropagation()}>
       <div className="flex items-start justify-between gap-4 border-b border-ink-800 px-6 py-4">
-        <div><div className="kicker text-acid-500 mb-1">{task.project_title || 'Project task'}</div><h2 className="font-display text-2xl text-ink-50">{task.title}</h2></div>
-        <button type="button" onClick={onClose} className="kicker text-ink-500 hover:text-ink-100 shrink-0">Close ✕</button>
+        <div><div className="kicker text-acid-500 mb-1">{task.project_title || 'Project task'}</div><h2 ref={titleRef} tabIndex={-1} id="task-flow-title" className="font-display text-2xl text-ink-50">{task.title}</h2></div>
+        <button type="button" disabled={busy} onClick={onClose} className="kicker text-ink-500 hover:text-ink-100 shrink-0">Close ✕</button>
       </div>
 
       {phase === 'confirm' ? <div className="px-6 py-6 space-y-5">
-        <div><div className="kicker text-acid-500 mb-2">Step 1 of 2 · join decision</div><h3 className="font-display text-2xl text-ink-50">Are you sure you want to do this project?</h3><p className="mt-2 text-sm text-ink-300 leading-relaxed">You are joining this exact task, not just bookmarking it. Once you confirm, your shared workspace opens and teammates have 24 hours to join before recruitment closes.</p></div>
+        <div><div className="kicker text-acid-500 mb-2">Step 1 of 2 · join decision</div><h3 className="font-display text-2xl text-ink-50">Join this task?</h3><p className="mt-2 text-sm text-ink-300 leading-relaxed">You are joining this exact task, not just bookmarking it. The first person to join starts a 24-hour teammate window. Joining an existing team uses the time remaining in that window.</p></div>
         <div className="border border-ink-800 bg-ink-950 p-4 space-y-3">
-          <Step number="01" title="Find teammates for 24 hours">{task.members?.length ? `${task.members.join(', ')} ${task.members.length === 1 ? 'is' : 'are'} already on this task.` : 'You will open the teammate window for this task.'}</Step>
-          <Step number="02" title="Work from the Git workspace">Your local pushes go to Launchpad, where the submitted commit is retained for review.</Step>
-          <Step number="03" title="Review before PR">The exact base-to-push diff is shown to the PA Tech admin before a GitHub pull request is opened.</Step>
+          <Step number="01" title="Find teammates for 24 hours">{task.members?.length ? `${task.members.length} teammate${task.members.length === 1 ? '' : 's'} already on this task.` : 'You will open the teammate window for this task.'}</Step>
+          <Step number="02" title={task.repository ? "Work from the Git workspace" : "Follow the task instructions"}>{task.repository ? "Your code is pushed to Launchpad and retained for review." : "Coordinate with your teammates using Discussion and Calendar."}</Step>
+          <Step number="03" title={task.repository ? "Submit for admin review" : "Mark the task complete"}>{task.repository ? "An admin reviews the exact changes before opening a GitHub pull request." : "Return to My work and mark the task complete when your team is finished."}</Step>
         </div>
         {task.repository && <p className="text-xs text-ink-400">GitHub source: <a className="text-acid-500 underline break-all" href={`https://github.com/${task.repository}`} target="_blank" rel="noreferrer">{task.repository}</a> · main</p>}
         {error && <p role="alert" className="text-sm text-[#fb7185]">{error}</p>}
-        <div className="flex gap-3"><button type="button" className="studio-primary" disabled={busy} onClick={join}>{busy ? 'Joining…' : 'Yes — open this project →'}</button><button type="button" className="kicker text-ink-500 hover:text-ink-200" onClick={onClose}>Not now</button></div>
+        <div className="flex gap-3"><button type="button" className="studio-primary" disabled={busy} onClick={join}>{busy ? 'Joining…' : 'Join task and continue →'}</button><button type="button" className="kicker text-ink-500 hover:text-ink-200" disabled={busy} onClick={onClose}>Not now</button></div>
       </div> : <div className="px-6 py-6 space-y-6">
-        <div><div className="kicker text-acid-500 mb-2">Step 2 of 2 · shared workspace</div><h3 className="font-display text-2xl text-ink-50">Your project handoff</h3><p className="mt-2 text-sm text-ink-300">{task.members?.length > 1 ? `Team: ${task.members.join(', ')}. ` : ''}{recruitingOpen ? `Recruiting closes in ${fmtCountdown(task.recruiting_ends_at)}.` : 'Recruitment is closed; existing members can keep working.'}</p></div>
+        <div><div className="kicker text-acid-500 mb-2">Step 2 of 2 · shared workspace</div><h3 className="font-display text-2xl text-ink-50">Your task workspace</h3><p className="mt-2 text-sm text-ink-300">{task.members?.length > 1 ? `Team: ${task.members.length} members. ` : ''}{recruitingOpen ? `Recruiting closes in ${fmtCountdown(task.recruiting_ends_at)}.` : 'Recruitment is closed; existing members can keep working.'}</p></div>
 
         {task.repository && task.clone_url ? <section className="border border-ink-700 bg-ink-950 p-4 space-y-4">
           <div><div className="kicker text-acid-500 mb-1">Git workspace</div><p className="text-xs text-ink-400">This is the task repo on Launchpad. Clone it, make changes locally, commit, then push to <code className="text-ink-200">main</code>.</p></div>
           <p className="text-xs text-ink-400">GitHub source: <a className="text-acid-500 underline break-all" href={`https://github.com/${task.repository}`} target="_blank" rel="noreferrer">{task.repository}</a> · main</p>
           <CopyRow label="Your Launchpad Git remote" value={task.clone_url} />
-          <details><summary className="cursor-pointer text-sm text-ink-200">Clone, push, and send the work back</summary><pre className="mt-3 bg-ink-900 border border-ink-800 p-3 text-xs text-ink-300 overflow-x-auto">{`git -c http.extraHeader="X-Patech-Git: YOUR_CREDENTIAL" clone ${task.clone_url}\ncd ${task.id}\ngit config http.extraHeader "X-Patech-Git: YOUR_CREDENTIAL"\n# edit files, commit, then:\ngit pull --no-rebase origin main\ngit push origin main`}</pre><p className="mt-2 text-xs text-ink-500">Generate your private Git credential in the project list. Launchpad records the authenticated push, not just the commit author.</p></details>
-        </section> : <div className="border border-ink-800 bg-ink-950 p-4 text-sm text-ink-400">This task is not linked to a GitHub repository. Complete it in the normal workspace flow.</div>}
+          <details><summary className="cursor-pointer text-sm text-ink-200">Clone, push, and send the work back</summary><pre className="mt-3 bg-ink-900 border border-ink-800 p-3 text-xs text-ink-300 overflow-x-auto">{`git -c http.extraHeader="X-Patech-Git: YOUR_CREDENTIAL" clone ${task.clone_url}\ncd ${task.id}\ngit config http.${task.clone_url}.extraHeader "X-Patech-Git: YOUR_CREDENTIAL"\n# edit files, commit, then:\ngit pull --no-rebase origin main\ngit push origin main`}</pre><p className="mt-2 text-xs text-ink-500">Generate your private Git credential in My work. Launchpad records the authenticated push, not just the commit author.</p></details>
+        </section> : <div className="border border-ink-800 bg-ink-950 p-4 text-sm text-ink-400">{task.repository ? 'The code workspace is not ready yet. Close this window, refresh the projects, and try again. Contact your administrator if it stays unavailable.' : 'This is a non-code task. Follow its instructions with your teammates, then choose Mark complete in My work.'}</div>}
 
         {task.repository && <section className="space-y-3">
+          {task.main_sync?.status === 'conflict' && <details><summary>Resolve the main merge locally</summary><pre className="overflow-x-auto text-xs p-3">{`git pull --no-rebase origin main
+git fetch origin refs/patech/upstream-main
+git merge FETCH_HEAD
+# Resolve conflicts, then:
+git add .
+git commit
+git push origin main`}</pre></details>}
+          {task.main_sync?.status === 'current' && <p className="text-xs">Main checked {new Date(task.main_sync.checked_at).toLocaleString()}</p>}
           <div className="kicker text-ink-500">Handoff status</div>
           <div className="border border-ink-800 p-4 space-y-3">
             <Step number="01" title="Teammate window" complete={!!task.members?.length}>{task.recruiting_ends_at ? (recruitingOpen ? `${fmtCountdown(task.recruiting_ends_at)} left to find teammates.` : 'Recruitment closed; the team is locked.') : 'Starts when the first teammate joins.'}</Step>
@@ -90,8 +103,8 @@ export default function TaskFlowModal({ entry, info, busy, error, onJoin, onSync
           </div>
           {!pushed && <p className="text-xs text-ink-500">The review button unlocks after Launchpad receives a push that differs from the starting commit.</p>}
         </section>}
-        <button type="button" onClick={onClose} className="kicker text-ink-500 hover:text-ink-200">Back to projects</button>
+        <button type="button" disabled={busy} onClick={onClose} className="kicker text-ink-500 hover:text-ink-200">Back to projects</button>
       </div>}
     </div>
-  </div>;
+  </Dialog>;
 }
