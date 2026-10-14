@@ -38,3 +38,7 @@ server/.data
 super_relay_contour_map*.html
 .venv
 __pycache__/
+
+# macOS metadata and local package backup
+._*
+.package.json.before-build-fix
