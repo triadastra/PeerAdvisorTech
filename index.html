@@ -5,7 +5,44 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0a0908" />
+    <script>
+      // Set theme before first paint to avoid a flash of the wrong scheme.
+      (function () {
+        var t = 'dark';
+        try { t = localStorage.getItem('patd-theme') === 'light' ? 'light' : 'dark'; } catch (e) {}
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
     <meta name="description" content="Peer Advisor Tech Department — a student engineering studio building production software for campus. Selected work, capabilities, and team." />
+    <link rel="canonical" href="https://patech.standardcas.org/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Peer Advisor Tech Department" />
+    <meta property="og:url" content="https://patech.standardcas.org/" />
+    <meta property="og:title" content="Peer Advisor Tech Department — Engineering Studio" />
+    <meta property="og:description" content="A student-run engineering studio building production software for campus. Selected work, capabilities, and team." />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Peer Advisor Tech Department — Engineering Studio" />
+    <meta name="twitter:description" content="A student-run engineering studio building production software for campus. Selected work, capabilities, and team." />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Peer Advisor Tech Department",
+      "alternateName": "PATD",
+      "url": "https://patech.standardcas.org/",
+      "email": "patech.shsid@outlook.com",
+      "foundingDate": "2026",
+      "description": "A student-run engineering studio building production software for campus.",
+      "parentOrganization": { "@type": "Organization", "name": "StandardCAS™" }
+    }
+    </script>
+
     <title>Peer Advisor Tech Department — Engineering Studio</title>
   </head>
   <body>

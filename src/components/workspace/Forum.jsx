@@ -64,7 +64,7 @@ export default function Forum({ ctx }) {
           <button
             onClick={post}
             disabled={busy || !body.trim()}
-            className="kicker text-ink-950 bg-acid-500 px-5 py-2.5 hover:bg-acid-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="kicker text-on-acid bg-acid-500 px-5 py-2.5 hover:bg-acid-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {busy ? 'Posting…' : 'Post →'}
           </button>

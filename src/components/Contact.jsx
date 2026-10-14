@@ -6,13 +6,13 @@ export default function Contact() {
   const { contact } = site;
 
   return (
-    <section id="contact" className="relative border-t border-ink-800 scroll-mt-20">
+    <section id="contact" className="relative border-t border-ink-800 scroll-mt-24">
       <motion.div
-        initial={reduce ? false : { opacity: 0, y: 20 }}
+        initial={reduce ? false : { opacity: 0, y: 22 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="mx-auto max-w-[1200px] px-6 py-24 md:py-32 grid grid-cols-1 lg:grid-cols-12 gap-12"
+        transition={{ type: 'spring', stiffness: 70, damping: 18, mass: 0.9 }}
+        className="mx-auto max-w-[1200px] px-6 py-28 md:py-40 grid grid-cols-1 lg:grid-cols-12 gap-12"
       >
         <div className="lg:col-span-7">
           <div className="kicker text-ink-500 mb-6">[ 04 ] — Contact</div>
@@ -23,7 +23,7 @@ export default function Contact() {
           </h2>
           <p className="mt-7 max-w-xl text-ink-300 text-lg leading-relaxed">{contact.blurb}</p>
           <div className="mt-10 flex flex-wrap gap-4">
-            <a href={contact.primary.href} className="kicker text-ink-950 bg-acid-500 px-6 py-3.5 hover:bg-acid-400 transition-colors">
+            <a href={contact.primary.href} className="kicker rounded-full text-on-acid bg-acid-500 px-7 py-3.5 hover:bg-acid-400 transition-colors">
               {contact.primary.label} →
             </a>
 

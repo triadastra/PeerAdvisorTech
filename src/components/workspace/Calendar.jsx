@@ -134,7 +134,7 @@ export default function CalendarView({ ctx }) {
             </select>
           </div>
           <input className={`${inputCls} w-full`} value={withWhom} onChange={(e) => setWithWhom(e.target.value)} placeholder="With… (optional)" />
-          <button type="submit" disabled={!title.trim() || busy} className="w-full kicker text-ink-950 bg-acid-500 px-4 py-2.5 hover:bg-acid-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          <button type="submit" disabled={!title.trim() || busy} className="w-full kicker text-on-acid bg-acid-500 px-4 py-2.5 hover:bg-acid-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             {busy ? 'Adding…' : 'Add to ' + selected.slice(5)}
           </button>
         </form>

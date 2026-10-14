@@ -1,3 +1,4 @@
+import './env.js';
 // ─────────────────────────────────────────────────────────────────────────
 //  AUTH PRIMITIVES — our own, built on Node's standard crypto. No libraries.
 //  · Passwords: scrypt with a per-user random salt (salt:hash hex).

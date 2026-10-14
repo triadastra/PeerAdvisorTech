@@ -1,6 +1,10 @@
 import './env.js';
 import crypto from 'node:crypto';
-export const oauthEnabled = () => process.env.LAUNCHPAD_AUTH_REQUIRED === 'true';
+// Hosted deployments use Launchpad unless explicitly opted out. Local dev can
+// still use password accounts without needing a platform proxy.
+export const oauthEnabled = () => process.env.LAUNCHPAD_AUTH_REQUIRED == null
+  ? process.env.NODE_ENV === 'production'
+  : process.env.LAUNCHPAD_AUTH_REQUIRED === 'true';
 export const oauthOrigin = () => process.env.APP_ORIGIN || 'https://patech.standardcas.org';
 export function isAdminIdentity(identity) {
   return Boolean(process.env.LAUNCHPAD_ADMIN_SUB && process.env.LAUNCHPAD_ADMIN_VID

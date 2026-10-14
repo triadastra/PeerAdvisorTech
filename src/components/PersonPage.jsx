@@ -41,7 +41,7 @@ export default function PersonPage() {
 
   const leads = liveLeads(person);
   const specs = person.leads === 'all' ? 'all' : leads.map((l) => l.n);
-  const bio = person.bio?.length ? person.bio : [person.insights];
+  const bio = person.bio?.filter(Boolean) ?? [];
   const derived = person.status === 'historical' ? [] : [
     ['Status', person.status === 'away' ? 'Away' : 'Active'],
   ];
@@ -64,11 +64,13 @@ export default function PersonPage() {
 
           <div className="grid lg:grid-cols-[1fr_320px] gap-10 lg:gap-14 mt-10">
             <div>
-              <Section title="Biography">
-                {bio.map((para, i) => (
-                  <p key={i} className="text-ink-200 md:text-lg leading-relaxed mb-4 max-w-2xl">{para}</p>
-                ))}
-              </Section>
+              {bio.length > 0 && (
+                <Section title="Biography">
+                  {bio.map((para, i) => (
+                    <p key={i} className="text-ink-200 md:text-lg leading-relaxed mb-4 max-w-2xl">{para}</p>
+                  ))}
+                </Section>
+              )}
 
               {person.sections?.map((s) => (
                 <Section key={s.title} title={s.title}>

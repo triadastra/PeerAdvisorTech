@@ -115,7 +115,7 @@ export default function Tasks({ ctx }) {
         <button
           type="submit"
           disabled={!title.trim() || busy}
-          className="kicker text-ink-950 bg-acid-500 px-5 py-2.5 hover:bg-acid-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="kicker text-on-acid bg-acid-500 px-5 py-2.5 hover:bg-acid-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {busy ? 'Adding…' : 'Add →'}
         </button>
@@ -152,7 +152,7 @@ export default function Tasks({ ctx }) {
           </div>
         )}
         {list.map((t) => {
-          const mine = t.user_id === user.id;
+          const mine = t.user_id === user.id || user.role === 'Admin';
           const done = t.status === 'done';
           return (
             <div key={t.id} className="group flex items-center gap-3 border-b border-ink-800 py-3.5">
@@ -164,7 +164,7 @@ export default function Tasks({ ctx }) {
                   done ? 'bg-acid-500' : 'border border-ink-600'
                 } ${mine ? 'hover:border-acid-500 cursor-pointer' : 'cursor-default opacity-60'}`}
               >
-                {done && <span className="text-ink-950 text-[10px] leading-none">✓</span>}
+                {done && <span className="text-on-acid text-[10px] leading-none">✓</span>}
               </button>
               <span className={`flex-1 text-sm truncate ${done ? 'text-ink-600 line-through' : 'text-ink-100'}`}>
                 {t.title}

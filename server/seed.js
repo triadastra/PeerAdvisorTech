@@ -8,75 +8,72 @@
 
 // group = a project track. node = a claimable step on that track's timeline.
 // `order` drives left→right position on the timeline.
+// Tracks mirror the seven AI Central specs on the public site; edit here when
+// the roadmap changes. Steps are deliberately small — one sitting to one week.
 export const trackSeed = [
-  ...[
-    { id: 'school-clubs', spec: 11, title: 'Club radar', category: 'School starter', blurb: 'Help classmates find their people. A directory for clubs, meetups, and trying something new.', color: '#bca7ff',
-      steps: [['sketch', 'Sketch a club card', '30–45 min · Design · Ask a friend what they want to know about a club. Sketch a card with meeting time, location, and a contact.'], ['build', 'Build the club directory', '1–2 hours · Code · Render three sample clubs with a search box and interest filters. Make it work on a phone.'], ['test', 'Try it with classmates', '30 min · Test · Ask two classmates to find a club. Write down where they get stuck and improve one thing.']] },
-    { id: 'school-lost-found', spec: 12, title: 'Lost & found', category: 'School starter', blurb: 'Reunite a water bottle with its human. Build a simple board for found items around school.', color: '#ffb97b',
-      steps: [['sketch', 'Map the find-it flow', '30 min · Design · Sketch how someone searches for a lost item and contacts the school office to claim it.'], ['build', 'Make a searchable board', '1–2 hours · Code · Use sample items to build a board with item type and location filters. Keep personal contact details off public cards.'], ['test', 'Run a hallway test', '30 min · Test · Ask a friend to find a sample item on their phone. Check empty searches and make the next step clear.']] },
-    { id: 'school-study', spec: 13, title: 'Study buddy', category: 'School starter', blurb: 'Less “what’s on the test?” More learning together. Make a shared revision resource shelf.', color: '#7ddbc6',
-      steps: [['sketch', 'Plan a resource shelf', '30 min · Design · Choose one subject and sketch a resource card with topic, type, and a useful description.'], ['build', 'Build topic filters', '1–2 hours · Code · Add five sample resources and filter by topic. Include a friendly empty state and clear link labels.'], ['test', 'Learn from a classmate', '30 min · Test · Ask someone to find a resource for one topic. Check links and keyboard navigation, then fix one confusing part.']] },
-  ].map(({ steps, ...track }) => ({ ...track, status: 'Ready to build', nodes: steps.map(([key, title, detail]) => ({ key, title, detail })) })),
   {
     id: 'fyona', spec: 2, title: 'Fyona®', category: 'Platform', status: 'Production',
-    blurb: 'AI magazine & layout studio — design, preview, export.',
+    blurb: 'The AI magazine & layout studio. Live preview, an AI layout agent, and print-ready export.',
     nodes: [
-      { key: 'live-studio', title: 'Live layout studio', detail: 'Browser-native editor with real-time preview.' },
-      { key: 'ai-layout', title: 'AI layout agent', detail: 'Agent that drafts and refines layouts.' },
-      { key: 'export', title: 'Professional export', detail: 'CMYK-PDF, HTML5, and slide export.' },
+      { key: 'editor-polish', title: 'Editor UX polish', detail: 'Smooth out the live-preview layout editor: selection states, drag handles, and keyboard shortcuts.' },
+      { key: 'layout-agent', title: 'Layout agent prompts', detail: 'Tune the AI layout agent’s prompts and constraints so drafts need less manual fixing.' },
+      { key: 'export-pipeline', title: 'Export pipeline', detail: 'Harden CMYK-PDF / HTML5 export: fonts, bleed, and page-break edge cases.' },
+      { key: 'load-testing', title: 'Load & perf pass', detail: 'Profile the studio under real traffic and cut the biggest rendering bottlenecks.' },
     ],
   },
   {
-    id: 'synonance', spec: 3, title: 'Academy', category: 'AI / ML', status: 'Production',
-    blurb: 'RAG study chatbot grounded in real curriculum.',
+    id: 'academy', spec: 3, title: 'Academy', category: 'AI / ML', status: 'Production',
+    blurb: 'The RAG study chatbot grounded in real curriculum and IB mock exams.',
     nodes: [
-      { key: 'super-rag', title: 'Super RAG pipeline', detail: 'Retrieval + MCP pipeline, ~84% fewer tokens.' },
-      { key: 'grounding', title: 'Curriculum grounding', detail: 'Index curriculum and IB mock exams.' },
-      { key: 'tiers', title: 'Tiered responses', detail: 'Fast / Standard / Pro / Max answer tiers.' },
+      { key: 'index-refresh', title: 'Curriculum index refresh', detail: 'Re-index this semester’s curriculum and mock exams into the retrieval store.' },
+      { key: 'rag-eval', title: 'RAG quality eval', detail: 'Build a small eval set of real student questions and measure answer grounding.' },
+      { key: 'tier-tuning', title: 'Response tier tuning', detail: 'Balance Fast / Standard / Pro / Max tiers for speed, depth, and token cost.' },
+      { key: 'chat-ux', title: 'Chat UX improvements', detail: 'Citations, follow-up suggestions, and a cleaner reading experience in the chat UI.' },
     ],
   },
   {
     id: 'launchpad', spec: 4, title: 'Launchpad™', category: 'Platform', status: 'Pre-launch',
-    blurb: 'Build, deploy, host, route, and store — one platform.',
+    blurb: 'The unified build-deploy-host platform — Git, PTY, Docker, and The Spine beneath it.',
     nodes: [
-      { key: 'build-deploy', title: 'Build & deploy', detail: 'Git + PTY + Docker deploy pipeline.' },
-      { key: 'isolation', title: 'Resource isolation', detail: 'Sandbox untrusted student code.' },
-      { key: 'spine', title: 'The Spine', detail: 'Routing, identity, telemetry, privacy.' },
-      { key: 'database', title: 'Shared database', detail: 'Platform data + competition question bank.' },
+      { key: 'deploy-pipeline', title: 'Deploy pipeline hardening', detail: 'Stress-test the Git → build → Docker deploy path and surface better failure messages.' },
+      { key: 'isolation-audit', title: 'Isolation audit', detail: 'Review container resource limits and network rules for untrusted student code.' },
+      { key: 'spine-telemetry', title: 'Spine telemetry', detail: 'Wire routing + usage telemetry with PII stripping across model providers.' },
+      { key: 'docs-onboarding', title: 'Onboarding docs', detail: 'Write the “ship your first app” guide clubs will follow at launch.' },
     ],
   },
   {
     id: 'sharedspace', spec: 5, title: 'SharedSpace', category: 'Community', status: 'In development',
-    blurb: 'Discover people, found clubs, and run them well.',
+    blurb: 'The people-and-clubs layer: a searchable talent directory plus Club Gateway.',
     nodes: [
-      { key: 'directory', title: 'Talent directory', detail: 'Searchable index of students by skill.' },
-      { key: 'club-gateway', title: 'Club Gateway', detail: 'Tools to found, affiliate, and run clubs.' },
+      { key: 'directory-search', title: 'Directory search', detail: 'Skill-based search across the student directory: indexing, filters, and ranking.' },
+      { key: 'club-gateway', title: 'Club Gateway flow', detail: 'The founding → affiliating → operating flow for clubs, with governance templates.' },
+      { key: 'profiles-mvp', title: 'Profile pages MVP', detail: 'Student profile pages that make talent discoverable across campus.' },
     ],
   },
   {
     id: 'careerplanner', spec: 6, title: 'CareerPlanner', category: 'Education', status: 'In development',
-    blurb: 'Plan a path from coursework to career.',
+    blurb: 'Connect what students study now to where they want to go next.',
     nodes: [
-      { key: 'exploration', title: 'Career exploration', detail: 'Map coursework to concrete career paths.' },
+      { key: 'path-data', title: 'Pathway data model', detail: 'Model coursework → skills → career paths as queryable data.' },
+      { key: 'planner-ui', title: 'Planner UI prototype', detail: 'The student-facing exploration interface: browse paths, save a plan.' },
+      { key: 'content-pass', title: 'Content pass', detail: 'Write and review the guidance content for the first set of paths.' },
     ],
   },
-  // ── PLACEHOLDER ─────────────────────────────────────────────────────────
-  // Study and Session mirror the stubs in src/data/projects.js. The single step
-  // on each is scaffolding, not real work — replace it with the actual
-  // claimable steps before pointing members at these tracks, because claiming a
-  // node opens a 24h recruiting window and provisions a git repo for it.
   {
     id: 'study', spec: 9, title: 'Study', category: 'Education', status: 'Planned',
-    blurb: 'TODO — one line on what Study does.',
+    blurb: 'A planned study companion — currently being scoped.',
     nodes: [
-      { key: 'todo', title: 'TODO — first step', detail: 'Replace with the first claimable step on this track.' },
+      { key: 'scoping', title: 'Product scoping', detail: 'Interview students, define what Study is (and is not), and write the one-page spec.' },
+      { key: 'prototype', title: 'Prototype v0', detail: 'A throwaway prototype to test the core loop with real students.' },
     ],
   },
   {
     id: 'session', spec: 10, title: 'Session', category: 'Platform', status: 'Planned',
     blurb: 'A home for academic labs and startups, with recruiting and scheduling tools.',
     nodes: [
-      { key: 'todo', title: 'TODO — first step', detail: 'Replace with the first claimable step on this track.' },
+      { key: 'requirements', title: 'Requirements & research', detail: 'Talk to lab and startup leads; collect the recruiting and scheduling pain points.' },
+      { key: 'recruiting-mvp', title: 'Recruiting MVP', detail: 'Post an opening, collect applications, review candidates — the smallest useful version.' },
+      { key: 'scheduling', title: 'Scheduling tools', detail: 'Shared availability and meeting scheduling built on the MVP.' },
     ],
   },
 ];

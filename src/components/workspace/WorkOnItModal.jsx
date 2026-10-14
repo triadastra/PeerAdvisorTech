@@ -47,7 +47,7 @@ export default function WorkOnItModal({ modal, assignments, onConfirm, onClose, 
       <motion.div
         initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }} transition={{ duration: 0.2 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full sm:max-w-lg bg-ink-900 border border-ink-700 max-h-[92vh] overflow-y-auto"
+        className="w-full sm:max-w-lg glass-panel max-h-[92vh] overflow-y-auto"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-ink-800 px-6 py-4">
@@ -87,7 +87,7 @@ export default function WorkOnItModal({ modal, assignments, onConfirm, onClose, 
               <button
                 onClick={onConfirm}
                 disabled={busy}
-                className="kicker text-ink-950 bg-acid-500 px-5 py-3 hover:bg-acid-400 transition-colors disabled:opacity-60 disabled:cursor-wait"
+                className="kicker btn-acid px-5 py-3 disabled:opacity-60 disabled:cursor-wait"
               >
                 {busy ? 'Working…' : joining ? 'Join & confirm →' : 'Confirm — I’ll work on it →'}
               </button>
@@ -125,7 +125,7 @@ export default function WorkOnItModal({ modal, assignments, onConfirm, onClose, 
             )}
 
             <div className="mt-6 flex items-center gap-3">
-              <button onClick={onClose} className="kicker text-ink-950 bg-acid-500 px-5 py-3 hover:bg-acid-400 transition-colors">Continue →</button>
+              <button onClick={onClose} className="kicker btn-acid px-5 py-3">Continue →</button>
               <button onClick={onInvite} className="kicker text-ink-500 hover:text-ink-200">Invite a friend in the forum</button>
             </div>
           </div>

@@ -1,9 +1,10 @@
+import Projects from './Projects';
 import { useState, useEffect } from 'react';
 import { fmtCountdown } from './util';
 
-export default function Groups({ ctx }) {
+function LegacyGroups({ ctx }) {
   const { user, tracks, assignments, openWorkOn } = ctx;
-  const [filter, setFilter] = useState('School starters');
+  const [filter, setFilter] = useState('All projects');
   const [query, setQuery] = useState('');
   const visible = tracks.filter((t) => (filter !== 'School starters' || t.category === 'School starter') && `${t.title} ${t.blurb} ${t.nodes.map(n => n.title + ' ' + n.detail).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
 
@@ -13,6 +14,13 @@ export default function Groups({ ctx }) {
     const t = setInterval(() => tick((n) => n + 1), 1000);
     return () => clearInterval(t);
   }, []);
+
+  if (!tracks.length) return (
+    <div className="space-y-5">
+      <h1 className="font-display text-3xl md:text-4xl font-semibold text-ink-50">Explore projects</h1>
+      <p className="text-ink-400">No projects published here yet.</p>
+    </div>
+  );
 
   const mine = (nodeId) => assignments.find((a) => a.node_id === nodeId && a.member_ids?.includes(user.id));
   const openOn = (nodeId) => assignments.find((a) => a.node_id === nodeId && a.status === 'recruiting');
@@ -81,4 +89,10 @@ export default function Groups({ ctx }) {
       </div>
     </div>
   );
+}
+
+export default function Groups({ ctx }) {
+  // Launchpad-published projects only exist under Launchpad SSO; the local
+  // seeded tracks (below) are the always-on catalog.
+  return <div className="space-y-10">{ctx.oauth && <Projects ctx={ctx} />}{ctx.tracks.length > 0 && <LegacyGroups ctx={ctx} />}</div>;
 }

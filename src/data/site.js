@@ -30,6 +30,7 @@ export const site = {
   nav: [
     { label: 'Work', target: 'work' },
     { label: 'Team', route: '/team' },
+    { label: 'Contact', target: 'contact' },
   ],
 
   // Capabilities (#about) — the five disciplines across the studio.
@@ -44,6 +45,15 @@ export const site = {
       { title: 'Community', text: 'Alliances, a talent directory, and club governance that connect students and clubs across campus.' },
       { title: 'Education', text: 'Career planning, competition prep, and outreach courses that help students grow.' },
     ],
+  },
+
+  // Team strip (#team) — a compact roster preview on the home page; the full
+  // catalog lives at /team.
+  teamStrip: {
+    heading: 'The builders',
+    blurb:
+      'A small senior team owns every project end to end — design, engineering, and operations. Click a name to open their profile.',
+    cta: 'Full contributor catalog',
   },
 
   // Closing / contact (#contact)
